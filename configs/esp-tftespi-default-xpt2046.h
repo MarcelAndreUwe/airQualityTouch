@@ -120,7 +120,6 @@ extern "C" {
   // SECTION 4A: Update your pin connections here
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-
   // TFT_eSPI: Chip Select for Touch Device
   // - Since we are not using the TFT_eSPI's integrated XPT2046 touch driver,
   //   it is best to disable it. This can be done by ensuring that the TOUCH_CS line
@@ -138,12 +137,12 @@ extern "C" {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
   // Calibration settings from diag_ard_touch_calib:
-  // DRV_TOUCH_XPT2046:
-  #define ADATOUCH_X_MIN    246
-  #define ADATOUCH_X_MAX    3837
-  #define ADATOUCH_Y_MIN    3925
-  #define ADATOUCH_Y_MAX    370
-  #define ADATOUCH_REMAP_YX 0    // Some touch controllers may swap X & Y coords
+  // DRV_TOUCH_XPT2046_PS [240x320]:
+  #define ADATOUCH_X_MIN    3851
+  #define ADATOUCH_X_MAX    264
+  #define ADATOUCH_Y_MIN    3896
+  #define ADATOUCH_Y_MAX    363
+  #define ADATOUCH_REMAP_YX 0
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   // SECTION 4D: Additional touch configuration
@@ -201,7 +200,7 @@ extern "C" {
   // Enable support for SPIFFS File System access
   // - Set to 1 to enable, 0 to disable
   // - Note that this requires the inclusion of TFT_eFEX library
-  #define GSLC_SPIFFS_EN               0 
+  #define GSLC_SPIFFS_EN               1 
 
 
   // =============================================================================
