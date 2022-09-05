@@ -1055,7 +1055,16 @@ bool gslc_DrvDrawBmpFromFile(gslc_tsGui* pGui,int16_t nDstX,int16_t nDstY,gslc_t
   // Load BMP image from file system
   // NOTE: No return value is provided upon decoder failure,
   //       so we always proceed as if it is OK.
-  fex.drawBmp(pStrFname, nDstX, nDstY);
+
+  // Changed Tetens
+  #if (GSLC_BMP_TRANS_EN)
+    m_disp.setSwapBytes(true); 
+
+    uint16_t nTransRaw = gslc_DrvAdaptColorToRaw(pGui->sTransCol);
+    fex.drawBmpTransparent(pStrFname, nDstX, nDstY, nullptr, nTransRaw);
+  #else
+    fex.drawBmp(pStrFname, nDstX, nDstY);
+  #endif
   return true;
 }
 

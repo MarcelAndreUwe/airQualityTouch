@@ -43,9 +43,6 @@
 // Note that font files are located within the Adafruit-GFX library folder:
 // ------------------------------------------------
 //<Fonts !Start!>
-#if defined(DRV_DISP_TFT_ESPI)
-  #error Project tab->Target Platform should be tft_espi
-#endif
 #include <Adafruit_GFX.h>
 //<Fonts !End!>
 

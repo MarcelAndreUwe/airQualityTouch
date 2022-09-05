@@ -851,6 +851,12 @@ bool gslc_DrvSetBkgndImage(gslc_tsGui* pGui,gslc_tsImgRef sImgRef)
 
 bool gslc_DrvSetBkgndColor(gslc_tsGui* pGui,gslc_tsColor nCol)
 {
+  // Dispose of previous background
+  if (pGui->sImgRefBkgnd.eImgFlags != GSLC_IMGREF_NONE) {
+    gslc_DrvImageDestruct(pGui->sImgRefBkgnd.pvImgRaw);
+    pGui->sImgRefBkgnd.eImgFlags = GSLC_IMGREF_NONE;
+  }
+
   if (pGui->pvDriver) {
     gslc_tsDriver*  pDriver = (gslc_tsDriver*)(pGui->pvDriver);
     pDriver->nColBkgnd = nCol;
