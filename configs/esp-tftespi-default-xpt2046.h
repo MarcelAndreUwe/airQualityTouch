@@ -169,7 +169,7 @@ extern "C" {
   //   - DEBUG_ERR 2 = Enable verbose error messaging (eg. bad parameters, etc.)
   // - For baseline Arduino UNO, recommended to disable this after one has
   //   confirmed basic operation of the library is successful.
-  #define DEBUG_ERR               1   // 1,2 to enable, 0 to disable
+  #define DEBUG_ERR               2   // 1,2 to enable, 0 to disable
 
   // Debug initialization message
   // - By default, GUIslice outputs a message in DEBUG_ERR mode
@@ -186,8 +186,8 @@ extern "C" {
   // - For memory constrained devices such as Arduino, it is best to
   //   set the following features to 0 (to disable) unless they are
   //   required.
-  #define GSLC_FEATURE_COMPOUND       0   // Compound elements (eg. XSelNum)
-  #define GSLC_FEATURE_XTEXTBOX_EMBED 0   // XTextbox control with embedded color
+  #define GSLC_FEATURE_COMPOUND       1   // Compound elements (eg. XSelNum)
+  #define GSLC_FEATURE_XTEXTBOX_EMBED 1   // XTextbox control with embedded color
   #define GSLC_FEATURE_INPUT          0   // Keyboard / GPIO input control
 
   // Enable support for SD card
@@ -224,7 +224,7 @@ extern "C" {
 
   // Define buffer size for loading images from SD
   // - A larger buffer will be faster but at the cost of RAM
-  #define GSLC_SD_BUFFPIXEL   50
+  #define GSLC_SD_BUFFPIXEL   75
 
   // Enable support for graphics clipping (DrvSetClipRect)
   // - Note that this will impact performance of drawing graphics primitives
@@ -237,7 +237,7 @@ extern "C" {
   #define GSLC_USE_FLOAT        0   // 1=Use floating pt library, 0=Fixed-point lookup tables
 
   #define GSLC_DEV_TOUCH ""
-  #define GSLC_USE_PROGMEM      0
+  #define GSLC_USE_PROGMEM      1
 
   #define GSLC_LOCAL_STR        0   // 1=Use local strings (in element array), 0=External
   #define GSLC_LOCAL_STR_LEN    30  // Max string length of text elements
@@ -250,7 +250,7 @@ extern "C" {
   //#define DBG_TOUCH         // Enable debugging of touch-presses
   //#define DBG_FRAME_RATE    // Enable diagnostic frame rate reporting
   //#define DBG_DRAW_IMM      // Enable immediate rendering of drawing primitives
-  //#define DBG_DRIVER        // Enable graphics driver debug reporting
+  #define DBG_DRIVER        // Enable graphics driver debug reporting
 
 
   // =============================================================================
