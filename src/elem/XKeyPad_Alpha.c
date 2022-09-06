@@ -223,12 +223,14 @@ void gslc_ElemXKeyPadBtnEvt_Alpha(void* pvKeyPad,uint8_t nId,gslc_tsXKeyPadResul
       if (DEBUG_XKEYPAD) GSLC_DEBUG_PRINT("BtnEvt_Alpha: Key=BS\n", "");
       bRet = gslc_XKeyPadTxtDelCh(pKeyPad,pKeyPad->nCursorPos);
       if (bRet) gslc_XKeyPadPendRedrawAddTxt(psResult);
+      delay(250); // By Tetens, debounce
       return;
 
     } else if (nId == KEYPAD_ID_SPACE) {
       if (DEBUG_XKEYPAD) GSLC_DEBUG_PRINT("BtnEvt_Alpha: Key=SPACE\n", "");
       bRet = gslc_XKeyPadTxtAddStr(pKeyPad,XKEYPAD_LABEL_SPACE,pKeyPad->nCursorPos);
       if (bRet) gslc_XKeyPadPendRedrawAddTxt(psResult);
+      delay(250); // By Tetens, debounce
       return;
 
     } else if (nId == KEYPAD_ID_SWAP_PAD) {
@@ -236,6 +238,7 @@ void gslc_ElemXKeyPadBtnEvt_Alpha(void* pvKeyPad,uint8_t nId,gslc_tsXKeyPadResul
       eLayoutSel = (eLayoutSel + 1) % E_XKEYPAD_SET__MAX;
       bLayoutChg = gslc_XKeyPadLayoutSet(pConfig,eLayoutSel);
       psResult->eRedrawState = psResult->eRedrawState | ((bLayoutChg)? XKEYPAD_REDRAW_FULL : XKEYPAD_REDRAW_ALL);
+      delay(250); // By Tetens, debounce
       return;
       
     } else {
