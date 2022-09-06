@@ -986,7 +986,14 @@ bool gslc_DrvDrawImage(gslc_tsGui* pGui,int16_t nDstX,int16_t nDstY,gslc_tsImgRe
       } else if ((sImgRef.eImgFlags & GSLC_IMGREF_FMT) == GSLC_IMGREF_FMT_BMP24) {
         // Draw Bitmap from SPIFFS file system
         return gslc_DrvDrawBmpFromFile(pGui,nDstX,nDstY,sImgRef);
-      } else {
+      }
+      // Changed by Tetens
+      else if ((sImgRef.eImgFlags & GSLC_IMGREF_FMT) == GSLC_IMGREF_FMT_BMP16) {
+        // Draw Bitmap from SPIFFS file system
+        return gslc_DrvDrawBmpFromFile(pGui,nDstX,nDstY,sImgRef);
+      }
+      // --- --- ---
+      else {
         return false; // TODO: not yet supported
       }
     #else
@@ -1059,7 +1066,6 @@ bool gslc_DrvDrawBmpFromFile(gslc_tsGui* pGui,int16_t nDstX,int16_t nDstY,gslc_t
   // Changed Tetens
   #if (GSLC_BMP_TRANS_EN)
     m_disp.setSwapBytes(true); 
-
     uint16_t nTransRaw = gslc_DrvAdaptColorToRaw(pGui->sTransCol);
     fex.drawBmpTransparent(pStrFname, nDstX, nDstY, nullptr, nTransRaw);
   #else
