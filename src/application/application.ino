@@ -127,54 +127,52 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_BTN_WIFI_SETUP:
         gslc_SetPageCur(&m_gui, E_PG_WIFI);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
-
-
-      
         break;
+
       case E_ELEM_BTN_dashboard:
         gslc_SetPageCur(&m_gui, E_PG_OVERVIEW);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
-
-
         break;
+
       case E_ELEM_BTN_SCAN_WIFI:
         scanning_wifi = true;
         break;
+
       case E_ELEM_BTN_WIFI_CONNECT:
         gslc_SetPageCur(&m_gui, E_PG_WIFI_PSWD);
-
         break;
+
       case E_ELEM_BTN_BACK_PG_WIFI:
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-
-        
         break;
+
       case E_ELEM_PSWD_INPUT:
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadAlpha, E_POP_KEYPAD_ALPHA, m_pElemIn_PASSWORD);
         break;
+
       case E_ELEM_BTN_CONNECT:
         connect_wifi(ssid);
         break;
+
       case E_ELEM_BTN_BACK_PG_WIFI_PWD:
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-
-        
         break;
+
       case E_ELEM_TOGGLE_MEASURE:
         // TODO Add code for Toggle button ON/OFF state
         if (gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_measure)) {
           ;
         }
         break;
+
       case E_ELEM_SETTINGS_BTN:
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-
-       
         break;
+
       case E_ELEM_MEASURE_BTN:
         break;
 //<Button Enums !End!>
@@ -303,8 +301,7 @@ void list_wifi_networks()
 bool connect_wifi(const char *wifi_name)
 {
     char msg[MAX_STR]; 
-    strncpy(msg,"Connecting to ",15);
-    strncat(msg,ssid,MAX_STR);
+    strncpy(msg,"Connecting ",12);
     gslc_ElemSetTxtStr(&m_gui, m_pElem_con_msg, msg);
     WiFi.begin(ssid, password);
     
@@ -338,13 +335,13 @@ void setup()
     // Create graphic elements
     // ------------------------------------------------
     InitGUIslice_gen();
-    gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
 
     
     // Hide images and disable image-button glow (to avoid slow rendering)
     gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
     gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, false);
     gslc_ElemSetVisible(&m_gui, m_pElem_img_wifi, false );
+    gslc_ElemSetVisible(&m_gui, m_pElem_wifi_gauge, false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_setup,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_measure,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_back_PG_WIFI_PWD,false);
@@ -385,29 +382,6 @@ void loop()
       }
 
       // Loading animation with Ring-Gauge
-
-      /*
-      if(!wifi_gauge_invert){
-        if(wifi_gauge_val != 360){
-          wifi_gauge_val++;
-        }
-        else{
-          wifi_gauge_invert = true; // spin beckwards
-          gslc_ElemXRingGaugeSetValRange(&m_gui, m_pElem_wifi_gauge, 360, 0);
-        }
-      }
-      else{
-        if(wifi_gauge_val != 0){
-          wifi_gauge_val--;
-        }else{
-          wifi_gauge_invert = false;
-          gslc_ElemXRingGaugeSetValRange(&m_gui, m_pElem_wifi_gauge, 0, 360);
-
-        }
-      }
-
-      */
-
       if(!wifi_gauge_invert){
         if(wifi_gauge_val < 360){
           wifi_gauge_val++;
@@ -415,7 +389,7 @@ void loop()
         else{
           // spin beckwards, swap active/inactive colors
           wifi_gauge_invert = true; 
-          gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT2);
+          gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT3);
           gslc_ElemXRingGaugeSetColorInactive(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GREEN_DK1);
           wifi_gauge_val = 0;
         }
@@ -427,19 +401,21 @@ void loop()
           // spin forwards, swap active/inactive colors
           wifi_gauge_invert = false;
           gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GREEN_DK1);
-          gslc_ElemXRingGaugeSetColorInactive(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT2);
+          gslc_ElemXRingGaugeSetColorInactive(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT3);
           wifi_gauge_val = 0;
         }
       }
 
       gslc_ElemXRingGaugeSetVal(&m_gui, m_pElem_wifi_gauge,(int16_t) wifi_gauge_val);
       found_networks = WiFi.scanComplete(); // returns: -2 when no scan started, -1 when scan is running
-      delay(2);
+      delay(1);
     }
     
     if(scanning_wifi && found_networks >= 0){
       // WiFi scan completed
       gslc_ElemSetVisible(&m_gui, m_pElem_wifi_gauge, false);
+      gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GREEN_DK1);
+      gslc_ElemXRingGaugeSetColorInactive(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT3);
       wifi_gauge_val = 0;
       scanning_wifi = false;
       gslc_ElemXRingGaugeSetVal(&m_gui, m_pElem_wifi_gauge,(int16_t) wifi_gauge_val);
@@ -461,7 +437,6 @@ void loop()
             // Let WiFi-Connection MSG Item blink
             delay(250);
             char *msg = gslc_ElemGetTxtStr(&m_gui, m_pElem_con_msg);
-            Serial.println(msg);
             strncat(msg,pnt,MAX_STR+1);
             gslc_ElemSetTxtStr(&m_gui, m_pElem_con_msg, msg);
             gslc_ElemSetVisible(&m_gui, m_pElem_con_msg, (cnt % 2 == 0));

@@ -68,26 +68,26 @@
 //<Enum !Start!>
 enum {E_PG_MAIN,E_PG_WIFI,E_PG_WIFI_PSWD,E_PG_OVERVIEW
       ,E_POP_KEYPAD_ALPHA};
-enum {E_DRAW_LINE1,E_DRAW_LINE2,E_DRAW_LINE3,E_ELEM_AQI
-      ,E_ELEM_BTN_BACK_PG_WIFI,E_ELEM_BTN_BACK_PG_WIFI_PWD
-      ,E_ELEM_BTN_CONNECT,E_ELEM_BTN_INFO,E_ELEM_BTN_SCAN_WIFI
-      ,E_ELEM_BTN_WIFI_CONNECT,E_ELEM_BTN_WIFI_SETUP
-      ,E_ELEM_BTN_dashboard,E_ELEM_CON_MSG,E_ELEM_HUM_VALUE
-      ,E_ELEM_IMAGE6,E_ELEM_IMAGE8,E_ELEM_IMG_NOWIFI,E_ELEM_IMG_WIFI
-      ,E_ELEM_LABEL_SSID_PG_WIFI,E_ELEM_LABEL_SSID_PG_WIFI_PWD
-      ,E_ELEM_MEASURE_BTN,E_ELEM_PM10_VALUE,E_ELEM_PM25_VALUE
-      ,E_ELEM_PROGRESS_MEASURE,E_ELEM_PSWD_INPUT,E_ELEM_RINGGAUGE_PM10
-      ,E_ELEM_RINGGAUGE_PM25,E_ELEM_SETTINGS_BTN,E_ELEM_TEMP_VALUE
-      ,E_ELEM_TEXTPM25,E_ELEM_TEXT_AQI,E_ELEM_TEXT_HUM_UNIT
-      ,E_ELEM_TEXT_MEASURE_ART,E_ELEM_TEXT_MEASURING
-      ,E_ELEM_TEXT_PASSWORD,E_ELEM_TEXT_PM10,E_ELEM_TEXT_PM10_UNIT
-      ,E_ELEM_TEXT_PM25_UNIT,E_ELEM_TEXT_SSID,E_ELEM_TEXT_SSID_PG_WIFI
-      ,E_ELEM_TEXT_TEMP_UNIT,E_ELEM_TITEL_PG_WIFI
-      ,E_ELEM_TITEL_PG_WIFI_PWD,E_ELEM_TITLE_PG_OVERVIEW
-      ,E_ELEM_TOGGLE_MEASURE,E_ELEM_WIFI_GAUGE,E_ELEM_WIFI_LIST
-      ,E_ELEM_KEYPAD_ALPHA};
+enum {E_DRAW_LINE1,E_DRAW_LINE3,E_ELEM_AQI,E_ELEM_BTN_BACK_PG_WIFI
+      ,E_ELEM_BTN_BACK_PG_WIFI_PWD,E_ELEM_BTN_CONNECT,E_ELEM_BTN_INFO
+      ,E_ELEM_BTN_SCAN_WIFI,E_ELEM_BTN_WIFI_CONNECT
+      ,E_ELEM_BTN_WIFI_SETUP,E_ELEM_BTN_dashboard,E_ELEM_CON_MSG
+      ,E_ELEM_HUM_VALUE,E_ELEM_IMAGE6,E_ELEM_IMAGE8,E_ELEM_IMG_NOWIFI
+      ,E_ELEM_IMG_WIFI,E_ELEM_LABEL_SSID_PG_WIFI
+      ,E_ELEM_LABEL_SSID_PG_WIFI_PWD,E_ELEM_MEASURE_BTN
+      ,E_ELEM_PM10_VALUE,E_ELEM_PM25_VALUE,E_ELEM_PROGRESS_MEASURE
+      ,E_ELEM_PSWD_INPUT,E_ELEM_RINGGAUGE_PM10,E_ELEM_RINGGAUGE_PM25
+      ,E_ELEM_SETTINGS_BTN,E_ELEM_TEMP_VALUE,E_ELEM_TEXTPM25
+      ,E_ELEM_TEXT_AQI,E_ELEM_TEXT_HUM_UNIT,E_ELEM_TEXT_MEASURE_ART
+      ,E_ELEM_TEXT_MEASURING,E_ELEM_TEXT_PASSWORD,E_ELEM_TEXT_PM10
+      ,E_ELEM_TEXT_PM10_UNIT,E_ELEM_TEXT_PM25_UNIT,E_ELEM_TEXT_SSID
+      ,E_ELEM_TEXT_SSID_PG_WIFI,E_ELEM_TEXT_TEMP_UNIT
+      ,E_ELEM_TITEL_PG_WIFI,E_ELEM_TITEL_PG_WIFI_PWD
+      ,E_ELEM_TITLE_PG_OVERVIEW,E_ELEM_TOGGLE_MEASURE,E_ELEM_WIFI_GAUGE
+      ,E_ELEM_WIFI_LIST,E_ELEM_KEYPAD_ALPHA};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
-enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN5X8,MAX_FONT};
+enum {E_BUILTIN10X16,E_BUILTIN5X8,E_FREESANS12,E_FREESANS9
+      ,E_FREESANSBOLD12,E_FREESANSBOLD9,MAX_FONT};
 //<Enum !End!>
 
 // ------------------------------------------------
@@ -109,7 +109,7 @@ enum {E_BUILTIN10X16,E_BUILTIN15X24,E_BUILTIN5X8,MAX_FONT};
 #define MAX_ELEM_PG_WIFI_PSWD 8 // # Elems total on page
 #define MAX_ELEM_PG_WIFI_PSWD_RAM MAX_ELEM_PG_WIFI_PSWD // # Elems in RAM
 
-#define MAX_ELEM_PG_OVERVIEW 28 // # Elems total on page
+#define MAX_ELEM_PG_OVERVIEW 27 // # Elems total on page
 #define MAX_ELEM_PG_OVERVIEW_RAM MAX_ELEM_PG_OVERVIEW // # Elems in RAM
 //<ElementDefines !End!>
 
@@ -211,8 +211,11 @@ void InitGUIslice_gen()
   // ------------------------------------------------
 //<Load_Fonts !Start!>
     if (!gslc_FontSet(&m_gui,E_BUILTIN10X16,GSLC_FONTREF_PTR,NULL,2)) { return; }
-    if (!gslc_FontSet(&m_gui,E_BUILTIN15X24,GSLC_FONTREF_PTR,NULL,3)) { return; }
     if (!gslc_FontSet(&m_gui,E_BUILTIN5X8,GSLC_FONTREF_PTR,NULL,1)) { return; }
+    if (!gslc_FontSet(&m_gui,E_FREESANS12,GSLC_FONTREF_PTR,&FreeSans12pt7b,1)) { return; }
+    if (!gslc_FontSet(&m_gui,E_FREESANS9,GSLC_FONTREF_PTR,&FreeSans9pt7b,1)) { return; }
+    if (!gslc_FontSet(&m_gui,E_FREESANSBOLD12,GSLC_FONTREF_PTR,&FreeSansBold12pt7b,1)) { return; }
+    if (!gslc_FontSet(&m_gui,E_FREESANSBOLD9,GSLC_FONTREF_PTR,&FreeSansBold9pt7b,1)) { return; }
 //<Load_Fonts !End!>
 
 //<InitGUI !Start!>
@@ -242,7 +245,7 @@ void InitGUIslice_gen()
   m_pElem_btn_WIFI_setup = pElemRef;
   
   // Create E_ELEM_BTN_dashboard button with image label
-  pElemRef = gslc_ElemCreateBtnImg(&m_gui,E_ELEM_BTN_dashboard,E_PG_MAIN,(gslc_tsRect){8,168,64,64},
+  pElemRef = gslc_ElemCreateBtnImg(&m_gui,E_ELEM_BTN_dashboard,E_PG_MAIN,(gslc_tsRect){8,170,64,64},
           gslc_GetImageFromFile(IMG_DASHBOARD,GSLC_IMGREF_FMT_BMP24),
           gslc_GetImageFromFile(IMG_DASHBOARD_SEL,GSLC_IMGREF_FMT_BMP24),
           &CbBtnCommon);
@@ -263,14 +266,14 @@ void InitGUIslice_gen()
   
   // create E_ELEM_BTN_SCAN_WIFI button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_SCAN_WIFI,E_PG_WIFI,
-    (gslc_tsRect){5,50,95,20},(char*)"Scan",0,E_BUILTIN10X16,&CbBtnCommon);
+    (gslc_tsRect){5,50,95,24},(char*)"Scan",0,E_FREESANS9,&CbBtnCommon);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_DK3,GSLC_COL_BLUE_LT4,GSLC_COL_GRAY_DK1);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
   gslc_ElemSetFrameEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TITEL_PG_WIFI text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITEL_PG_WIFI,E_PG_WIFI,(gslc_tsRect){0,5,320,18},
-    (char*)"Network settings",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITEL_PG_WIFI,E_PG_WIFI,(gslc_tsRect){0,0,320,20},
+    (char*)"Network settings",0,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -290,21 +293,21 @@ void InitGUIslice_gen()
   
   // create E_ELEM_BTN_WIFI_CONNECT button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI_CONNECT,E_PG_WIFI,
-    (gslc_tsRect){5,90,95,20},(char*)"Connect",0,E_BUILTIN10X16,&CbBtnCommon);
+    (gslc_tsRect){5,90,95,24},(char*)"Connect",0,E_FREESANS9,&CbBtnCommon);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_DK3,GSLC_COL_BLUE_LT4,GSLC_COL_GRAY_DK1);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
   gslc_ElemSetFrameEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TEXT_SSID_PG_WIFI text label
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_SSID_PG_WIFI,E_PG_WIFI,(gslc_tsRect){20,180,61,18},
-    (char*)"SSID:",0,E_BUILTIN10X16);
+    (char*)"SSID:",0,E_FREESANS9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_LABEL_SSID_PG_WIFI runtime modifiable text
   static char m_sDisplayText3[26] = "Nothing selected";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_LABEL_SSID_PG_WIFI,E_PG_WIFI,(gslc_tsRect){110,180,151,20},
-    (char*)m_sDisplayText3,26,E_BUILTIN5X8);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_LABEL_SSID_PG_WIFI,E_PG_WIFI,(gslc_tsRect){110,176,151,24},
+    (char*)m_sDisplayText3,26,E_FREESANS9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
@@ -321,14 +324,13 @@ void InitGUIslice_gen()
   // Create ring gauge E_ELEM_WIFI_GAUGE 
   static char m_sRingText3[2] = "";
   pElemRef = gslc_ElemXRingGaugeCreate(&m_gui,E_ELEM_WIFI_GAUGE,E_PG_WIFI,&m_sXRingGauge3,
-          (gslc_tsRect){185,85,50,50},
+          (gslc_tsRect){176,76,70,70},
           (char*)m_sRingText3,2,E_BUILTIN5X8);
   gslc_ElemXRingGaugeSetValRange(&m_gui, pElemRef, 0, 360);
   gslc_ElemXRingGaugeSetVal(&m_gui, pElemRef, 0); // Set initial value
-  gslc_ElemXRingGaugeSetThickness(&m_gui,pElemRef, 5);
+  gslc_ElemXRingGaugeSetThickness(&m_gui,pElemRef, 8);
   gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui,pElemRef, GSLC_COL_GREEN_DK1);
-  gslc_ElemXRingGaugeSetColorInactive(&m_gui,pElemRef, GSLC_COL_GRAY_LT2);
-  gslc_ElemSetVisible(&m_gui, pElemRef, false);
+  gslc_ElemXRingGaugeSetColorInactive(&m_gui,pElemRef, GSLC_COL_GRAY_LT3);
   m_pElem_wifi_gauge = pElemRef;
 
   // -----------------------------------
@@ -348,28 +350,28 @@ void InitGUIslice_gen()
   m_pElemIn_PASSWORD = pElemRef;
   
   // Create E_ELEM_TITEL_PG_WIFI_PWD text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITEL_PG_WIFI_PWD,E_PG_WIFI_PSWD,(gslc_tsRect){0,5,320,18},
-    (char*)"Network settings",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITEL_PG_WIFI_PWD,E_PG_WIFI_PSWD,(gslc_tsRect){0,0,320,20},
+    (char*)"Network settings",0,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXT_SSID text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_SSID,E_PG_WIFI_PSWD,(gslc_tsRect){20,50,61,18},
-    (char*)"SSID:",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_SSID,E_PG_WIFI_PSWD,(gslc_tsRect){20,50,50,17},
+    (char*)"SSID:",0,E_FREESANS9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXT_PASSWORD text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PASSWORD,E_PG_WIFI_PSWD,(gslc_tsRect){0,75,109,18},
-    (char*)"Password:",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PASSWORD,E_PG_WIFI_PSWD,(gslc_tsRect){4,75,100,18},
+    (char*)"Password:",0,E_FREESANS9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_LABEL_SSID_PG_WIFI_PWD runtime modifiable text
   static char m_sDisplayText12[26] = "Nothing selected";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_LABEL_SSID_PG_WIFI_PWD,E_PG_WIFI_PSWD,(gslc_tsRect){115,50,200,20},
-    (char*)m_sDisplayText12,26,E_BUILTIN5X8);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_LABEL_SSID_PG_WIFI_PWD,E_PG_WIFI_PSWD,(gslc_tsRect){115,48,205,22},
+    (char*)m_sDisplayText12,26,E_FREESANS9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
@@ -377,15 +379,15 @@ void InitGUIslice_gen()
   
   // create E_ELEM_BTN_CONNECT button with text label
   pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_CONNECT,E_PG_WIFI_PSWD,
-    (gslc_tsRect){115,110,95,20},(char*)"Connect",0,E_BUILTIN10X16,&CbBtnCommon);
+    (gslc_tsRect){115,110,95,24},(char*)"Connect",0,E_FREESANS9,&CbBtnCommon);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_DK3,GSLC_COL_BLUE_LT4,GSLC_COL_GRAY_DK1);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
   gslc_ElemSetFrameEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_CON_MSG runtime modifiable text
   static char m_sDisplayText13[51] = "";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_CON_MSG,E_PG_WIFI_PSWD,(gslc_tsRect){10,150,300,18},
-    (char*)m_sDisplayText13,51,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_CON_MSG,E_PG_WIFI_PSWD,(gslc_tsRect){10,150,300,22},
+    (char*)m_sDisplayText13,51,E_FREESANS9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   m_pElem_con_msg = pElemRef;
   
@@ -402,21 +404,21 @@ void InitGUIslice_gen()
   
   
   // Create E_ELEM_TITLE_PG_OVERVIEW text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITLE_PG_OVERVIEW,E_PG_OVERVIEW,(gslc_tsRect){10,0,300,18},
-    (char*)"Air quality",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITLE_PG_OVERVIEW,E_PG_OVERVIEW,(gslc_tsRect){0,0,320,20},
+    (char*)"Air quality",0,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXT_PM10 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PM10,E_PG_OVERVIEW,(gslc_tsRect){0,34,160,18},
-    (char*)"PM 1.0",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PM10,E_PG_OVERVIEW,(gslc_tsRect){0,34,160,16},
+    (char*)"PM 10",0,E_BUILTIN10X16);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXTPM25 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXTPM25,E_PG_OVERVIEW,(gslc_tsRect){160,34,160,18},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXTPM25,E_PG_OVERVIEW,(gslc_tsRect){160,34,160,16},
     (char*)"PM 2.5",0,E_BUILTIN10X16);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
@@ -430,8 +432,8 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_PM10_VALUE runtime modifiable text
   static char m_sDisplayText17[5] = "";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_PM10_VALUE,E_PG_OVERVIEW,(gslc_tsRect){35,60,49,18},
-    (char*)m_sDisplayText17,5,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_PM10_VALUE,E_PG_OVERVIEW,(gslc_tsRect){35,60,51,20},
+    (char*)m_sDisplayText17,5,E_FREESANS12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -440,8 +442,8 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_PM25_VALUE runtime modifiable text
   static char m_sDisplayText18[5] = "";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_PM25_VALUE,E_PG_OVERVIEW,(gslc_tsRect){195,60,49,18},
-    (char*)m_sDisplayText18,5,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_PM25_VALUE,E_PG_OVERVIEW,(gslc_tsRect){195,60,51,20},
+    (char*)m_sDisplayText18,5,E_FREESANS12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -449,7 +451,7 @@ void InitGUIslice_gen()
   m_pElem_pm25_value = pElemRef;
   
   // Create E_ELEM_TEXT_MEASURE_ART text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_MEASURE_ART,E_PG_OVERVIEW,(gslc_tsRect){220,140,70,20},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_MEASURE_ART,E_PG_OVERVIEW,(gslc_tsRect){220,140,67,18},
     (char*)"24h average",0,E_BUILTIN5X8);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -459,15 +461,11 @@ void InitGUIslice_gen()
   // Create E_DRAW_LINE1 line 
   pElemRef = gslc_ElemCreateLine(&m_gui,E_DRAW_LINE1,E_PG_OVERVIEW,2,120,157,120);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT2,GSLC_COL_GRAY_LT2);
-
-  // Create E_DRAW_LINE2 line 
-  pElemRef = gslc_ElemCreateLine(&m_gui,E_DRAW_LINE2,E_PG_OVERVIEW,80,18,240,18);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT2,GSLC_COL_GRAY_LT2);
   
   // Create E_ELEM_AQI runtime modifiable text
   static char m_sDisplayText22[11] = "Good";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_AQI,E_PG_OVERVIEW,(gslc_tsRect){70,95,181,26},
-    (char*)m_sDisplayText22,11,E_BUILTIN15X24);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_AQI,E_PG_OVERVIEW,(gslc_tsRect){70,95,149,20},
+    (char*)m_sDisplayText22,11,E_FREESANSBOLD12);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GREEN_DK1);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
@@ -492,25 +490,25 @@ void InitGUIslice_gen()
   m_pElem_hum_val = pElemRef;
   
   // Create E_ELEM_TEXT_TEMP_UNIT text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_TEMP_UNIT,E_PG_OVERVIEW,(gslc_tsRect){130,134,20,18},
-    (char*)"C",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_TEMP_UNIT,E_PG_OVERVIEW,(gslc_tsRect){130,134,13,18},
+    (char*)"C",0,E_FREESANSBOLD9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXT_HUM_UNIT text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_HUM_UNIT,E_PG_OVERVIEW,(gslc_tsRect){130,170,13,18},
-    (char*)"%",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_HUM_UNIT,E_PG_OVERVIEW,(gslc_tsRect){130,170,16,18},
+    (char*)"%",0,E_FREESANSBOLD9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXT_PM10_UNIT text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PM10_UNIT,E_PG_OVERVIEW,(gslc_tsRect){88,60,31,20},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PM10_UNIT,E_PG_OVERVIEW,(gslc_tsRect){90,65,31,20},
     (char*)"ug/m3",0,E_BUILTIN5X8);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXT_PM25_UNIT text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PM25_UNIT,E_PG_OVERVIEW,(gslc_tsRect){248,60,31,20},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_PM25_UNIT,E_PG_OVERVIEW,(gslc_tsRect){250,65,31,20},
     (char*)"ug/m3",0,E_BUILTIN5X8);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -550,7 +548,7 @@ void InitGUIslice_gen()
   m_pElem_progress_measure = pElemRef;
   
   // Create E_ELEM_TEXT_MEASURING text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_MEASURING,E_PG_OVERVIEW,(gslc_tsRect){100,208,120,15},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_MEASURING,E_PG_OVERVIEW,(gslc_tsRect){100,212,120,10},
     (char*)"Measuring",0,E_BUILTIN5X8);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
@@ -559,8 +557,8 @@ void InitGUIslice_gen()
   m_pElem_Measuring = pElemRef;
   
   // Create E_ELEM_TEXT_AQI text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_AQI,E_PG_OVERVIEW,(gslc_tsRect){8,100,49,18},
-    (char*)"AQI:",0,E_BUILTIN10X16);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_AQI,E_PG_OVERVIEW,(gslc_tsRect){8,95,35,20},
+    (char*)"AQI:",0,E_FREESANS9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
