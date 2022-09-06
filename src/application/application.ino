@@ -12,10 +12,14 @@
 //
 // ICONS:
 // First download a 32x32 icon (.png)
-// Upload to https://onlinepngtools.com/change-png-color and replace transparent (0,0,0,0) with white (255,255,255)
-// Download editid .png file
+// Optional: Change the color of the PNG image by uploading it to https://pinetools.com/colorize-image
+// Download the new colorized image as png
+// Upload this png to https://onlinepngtools.com/change-png-color and replace transparent (0,0,0,0) with white (255,255,255)
+// Download edited .png file
 // Upload .png to https://online-converting.com/image/convert2bmp/#
-// Download .bmp and save to SPIFFS
+// Download .bmp and save to SPIFFS by putting it into the "data" folder.
+//
+// Blue Color: Hex: 8cb6ff
 //
 
 // ------------------------------------------------
