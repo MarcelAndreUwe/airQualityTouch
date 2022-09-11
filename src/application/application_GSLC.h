@@ -543,7 +543,7 @@ void InitGUIslice_gen()
 
   // Create progress bar E_ELEM_PROGRESS_MEASURE 
   pElemRef = gslc_ElemXProgressCreate(&m_gui,E_ELEM_PROGRESS_MEASURE,E_PG_OVERVIEW,&m_sXBarGauge1,
-    (gslc_tsRect){100,222,120,12},0,20,0,GSLC_COL_GREEN_DK1,false);
+    (gslc_tsRect){100,222,120,12},0,400,0,GSLC_COL_GREEN_DK1,false);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_DK1,GSLC_COL_GRAY_LT2,GSLC_COL_WHITE);
   m_pElem_progress_measure = pElemRef;
   
