@@ -27,8 +27,10 @@
 // ------------------------------------------------
 #include "application_GSLC.h"
 #include "C:/Users/Marcel/.platformio/packages/framework-arduinoespressif8266/libraries/ESP8266WiFi/src/ESP8266WiFi.h"
-#include <SDS011.h>
+//#include <SDS011.h>
 #include <string>
+
+#include "sds011_helper.h"
 
 
 
@@ -77,8 +79,10 @@ char ssid[MAX_STR];
 char password[MAX_STR];
 char ip_address[16];
 bool connecting = false;
-SDS011 sds;
+//SDS011 sds;
 float pm10, pm25;
+
+SDS_Sensor_Helper sds_sensor;
 
 int cnt = 1;
 int cnt2 = 1;
@@ -90,8 +94,9 @@ bool r2_ = false;
 
 int found_networks = -5;
 bool scanning_wifi = false;
-bool wifi_gauge_invert = false;
-int wifi_gauge_val = 0;
+bool loading_anim_invert = false;
+bool show_24h_average = false;
+int loading_anim_val = 0;
 
 const char* pnt = ".";
 char buff[10];
@@ -103,6 +108,8 @@ unsigned long currentMillis;
 unsigned long request_time = 0;
 bool measure_request = false;
 int error = 0;
+
+void show_value(bool pm10_val=false);
 
 #define background_color (gslc_tsColor) {0, 228, 171}
 
@@ -164,7 +171,15 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_TOGGLE_MEASURE:
         // TODO Add code for Toggle button ON/OFF state
         if (gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_measure)) {
-          ;
+          show_24h_average = true;
+          show_value(true);
+          show_value(false);
+
+        }
+        else{
+          show_24h_average = false;
+          show_value(true);
+          show_value(false);
         }
         break;
 
@@ -251,12 +266,7 @@ bool CbListbox(void* pvGui, void* pvElemRef, int16_t nSelId)
   }
   return true;
 }
-//<Draw Callback !Start!>
-//<Draw Callback !End!>
-//<Slider Callback !Start!>
-//<Slider Callback !End!>
-//<Tick Callback !Start!>
-//<Tick Callback !End!>
+
 
 
 
@@ -311,29 +321,40 @@ bool connect_wifi(const char *wifi_name)
 }
 
 
-
+void show_value(bool pm10_val){
+  ret = snprintf(buff, 10, "%f", sds_sensor.get_average_value(pm10_val, show_24h_average));
+  if(pm10_val){
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_value, buff);
+    if((int)sds_sensor.get_average_value(pm10_val, show_24h_average) > 1.5){
+        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, (int)sds_sensor.get_average_value(pm10_val, show_24h_average));
+    }
+    else{
+        // To show a littlebit green
+        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, 1.5);
+    }
+  }
+  else{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_value, buff);
+    if((int)sds_sensor.get_average_value(pm10_val, show_24h_average) > 1.5){
+        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, (int)sds_sensor.get_average_value(pm10_val, show_24h_average));
+    }
+    else{
+        // To show a littlebit green
+        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, 1.5);
+    }
+  }
+}
 
 void setup()
-{
-    // ------------------------------------------------
-    // Initialize
-    // ------------------------------------------------
-    sds.begin(5, 16); //RX, TX
-
+{ 
+    sds_sensor.setup(16, 5, interval_heatup, interval);
+    delay(500);
     Serial.begin(9600);
     // Wait for USB Serial 
     //delay(1000);  // NOTE: Some devices require a delay after Serial.begin() before serial port can be used
 
     gslc_InitDebug(&DebugOut);
 
-
-    // ------------------------------------------------
-    // Load Fonts
-    // ------------------------------------------------
-
-    // ------------------------------------------------
-    // Create graphic elements
-    // ------------------------------------------------
     InitGUIslice_gen();
 
     
@@ -349,16 +370,6 @@ void setup()
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_WIFI_setup,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_info,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_back_pg_wifi,false);
-
-
-
-
-
-
-
-
-
-
 }
 
 // -----------------------------------
@@ -382,31 +393,31 @@ void loop()
       }
 
       // Loading animation with Ring-Gauge
-      if(!wifi_gauge_invert){
-        if(wifi_gauge_val < 360){
-          wifi_gauge_val++;
+      if(!loading_anim_invert){
+        if(loading_anim_val < 360){
+          loading_anim_val++;
         }
         else{
           // spin beckwards, swap active/inactive colors
-          wifi_gauge_invert = true; 
+          loading_anim_invert = true; 
           gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT3);
           gslc_ElemXRingGaugeSetColorInactive(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GREEN_DK1);
-          wifi_gauge_val = 0;
+          loading_anim_val = 0;
         }
       }
       else{
-        if(wifi_gauge_val < 360){
-          wifi_gauge_val++;
+        if(loading_anim_val < 360){
+          loading_anim_val++;
         }else{
           // spin forwards, swap active/inactive colors
-          wifi_gauge_invert = false;
+          loading_anim_invert = false;
           gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GREEN_DK1);
           gslc_ElemXRingGaugeSetColorInactive(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT3);
-          wifi_gauge_val = 0;
+          loading_anim_val = 0;
         }
       }
 
-      gslc_ElemXRingGaugeSetVal(&m_gui, m_pElem_wifi_gauge,(int16_t) wifi_gauge_val);
+      gslc_ElemXRingGaugeSetVal(&m_gui, m_pElem_wifi_gauge,(int16_t) loading_anim_val);
       found_networks = WiFi.scanComplete(); // returns: -2 when no scan started, -1 when scan is running
       delay(1);
     }
@@ -416,20 +427,11 @@ void loop()
       gslc_ElemSetVisible(&m_gui, m_pElem_wifi_gauge, false);
       gslc_ElemXRingGaugeSetColorActiveFlat(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GREEN_DK1);
       gslc_ElemXRingGaugeSetColorInactive(&m_gui, m_pElem_wifi_gauge, GSLC_COL_GRAY_LT3);
-      wifi_gauge_val = 0;
+      loading_anim_val = 0;
       scanning_wifi = false;
-      gslc_ElemXRingGaugeSetVal(&m_gui, m_pElem_wifi_gauge,(int16_t) wifi_gauge_val);
+      gslc_ElemXRingGaugeSetVal(&m_gui, m_pElem_wifi_gauge,(int16_t) loading_anim_val);
       list_wifi_networks();
     }
-      
-
-
-
-
-   
-    
-
-
 
     if ( connecting ) 
     { 
@@ -466,68 +468,80 @@ void loop()
         }
     }
 
-
     currentMillis = millis();
 
-    
-    if(!measure_request && (currentMillis - lastMeasure > interval)){
-        // Wakeup SDS and request a measurement
-        Serial.println("SDS Wakeup");
-        delay(5);
-        sds.wakeup();
-        measure_request = true;
-        request_time = currentMillis;
-        gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, true);
-        gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, true);
 
+    if(sds_sensor.update(currentMillis))
+    {
+      // new meas-values available
 
+      // reset loading animation colors / values
+      gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
+      gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, false);
+      loading_anim_invert = false;
+      gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GRAY_LT2,GSLC_COL_WHITE);
+      gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GREEN_DK1);
+
+      // handle values
+      show_value(true);
+      show_value(false);
+
+      
+      Serial.print("Last PM 10 Measure: " );
+      Serial.println(String(sds_sensor.get_last_value(true)));
+      Serial.print("Last PM 25 Measure:" );
+      Serial.println(String(sds_sensor.get_last_value(false)));
+      Serial.print("Average PM 10 (24h): " );
+      Serial.println(String(sds_sensor.get_average_value(true, true)));
+      Serial.print("Average PM 25 (24h):"); 
+      Serial.println(String(sds_sensor.get_average_value(false, true)));
+      Serial.print("Average PM 10 (runtime): "); 
+      Serial.println(String(sds_sensor.get_average_value(true, false)));
+      Serial.print("Average PM 25 (runtime):" );
+      Serial.println(String(sds_sensor.get_average_value(false, false)));
+      Serial.print("Meas count (last 24h):" );
+      Serial.println(String(sds_sensor.get_measure_cnt(true)));
+      Serial.print("Meas count (runtime):"); 
+      Serial.println(String(sds_sensor.get_measure_cnt(false)));
     }
 
-    if(measure_request){
-        // Progressbar animation while SDS-Sensor measurement
-        gslc_ElemXProgressSetVal(&m_gui, m_pElem_progress_measure, (int16_t) ((currentMillis - request_time) / 1000.0));
-    }
+    else{
+      if(sds_sensor.is_measurement_running() == true)
+      {
+          // Progressbar animation while SDS-Sensor measurement
+          gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, true);
+          gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, true);
 
-    if(measure_request && (currentMillis - request_time > interval_heatup)){
-        // do measurement and set SDS to sleep
-        Serial.println("SDS Measurement");
-        gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
-        gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, false);
-        lastMeasure = currentMillis;
-        measure_request = false;
-        error = sds.read(&pm25, &pm10);
-        if (!error) {
-            ret = snprintf(buff, 10, "%f", pm25);
-            if(ret){
-                gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_value, buff);
-                if((int)pm25 > 1.5){
-                    gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, (int)pm25);
-                }
-                else{
-                    // To show a littlebit green
-                    gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, 1.5);
-                }
-                Serial.println('PM 25 Measure:' + String(pm25));
+          if(!loading_anim_invert){
+            if(loading_anim_val < 400){
+              loading_anim_val++;
             }
-            ret = snprintf(buff, 10, "%f", pm10);
-            if(ret){
-                gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_value, buff);
-                if((int)pm10 > 1.5){
-                    gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, (int)pm10);
-                }
-                else{
-                    // To show a littlebit green
-                    gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, 1.5);
-                }
-                Serial.println('PM 10 Measure: ' + String(pm10));
+            else{
+              // spin beckwards, swap active/inactive colors
+              loading_anim_invert = true; 
+              gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GREEN_DK1,GSLC_COL_WHITE);
+              gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GRAY_LT2);
+              loading_anim_val = 0;
             }
-        }
-        else{
-            Serial.println("Error while SDS measure!");
-        }
-        sds.sleep();
+          }
+          else{
+            if(loading_anim_val < 400){
+              loading_anim_val++;
+            }
+            else{
+              // spin forwards, swap active/inactive colors to default
+              loading_anim_invert = false;
+              gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GRAY_LT2,GSLC_COL_WHITE);
+              gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GREEN_DK1);
+              loading_anim_val = 0;
+            }
+          }
+        delay(1.5);
+        gslc_ElemXProgressSetVal(&m_gui, m_pElem_progress_measure,(int16_t) loading_anim_val);
+      }
     }
     
+      
     // ------------------------------------------------
     // Periodically call GUIslice update function
     // ------------------------------------------------
