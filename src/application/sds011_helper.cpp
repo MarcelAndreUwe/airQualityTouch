@@ -1,33 +1,45 @@
-#include "../src/application/sds011_helper.h"
+//#include "../src/application/sds011_helper.h"
+#include "sds011_helper.h"
 #include <stdint.h>
+#include <Arduino.h>
 
-SDS_Sensor_Helper::SDS_Sensor_Helper(void){
+//#include <HardwareSerial.h>
 
-}
-void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, unsigned long meas_interval){
-    this->pm10_sum = 0.0;
-    this->pm25_sum = 0.0;
-    this->pm10_last_val = 0.0;
-    this->pm25_last_val = 0.0;
-    this->pm10_sum_24h = 0.0;
-    this->pm25_sum_24h = 0.0;
-    this->pm10_last_24h_average = 0.0;
-    this->pm25_last_24h_average = 0.0;
-    this->runtime_meas_cnt = 0;    
-    this->meas_cnt_24h = 0;
-    this->sds_sensor.begin(rx_pin, tx_pin); 
-    this->measurement_is_running = false;
-    this->wakeup_time = wakeup_time;
-    this->measurement_starting_time = 0;
-    this->meas_interval = meas_interval;
-}
+#define ESP32
+SDS_Sensor_Helper::SDS_Sensor_Helper(void){}
+
+    void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, unsigned long meas_interval){
+        this->pm10_sum = 0.0;
+        this->pm25_sum = 0.0;
+        this->pm10_last_val = 0.0;
+        this->pm25_last_val = 0.0;
+        this->pm10_sum_24h = 0.0;
+        this->pm25_sum_24h = 0.0;
+        this->pm10_last_24h_average = 0.0;
+        this->pm25_last_24h_average = 0.0;
+        this->runtime_meas_cnt = 0;    
+        this->meas_cnt_24h = 0;
+        #ifdef ESP32
+            // ESP32 must use HardwareSerial
+            this->sds_sensor.begin(&Serial2);
+            delay(100);
+            this->sds_sensor.sleep();
+        #else
+            this->sds_sensor.begin(rx_pin, tx_pin); 
+            delay(100);
+            this->sds_sensor.sleep();
+        #endif
+        this->measurement_is_running = false;
+        this->wakeup_time = wakeup_time;
+        this->measurement_starting_time = 0;
+        this->meas_interval = meas_interval;
+    }
 
 bool SDS_Sensor_Helper::update(unsigned long current_millis){
     bool ret = false;
     if(!this->measurement_is_running && (current_millis - this->last_meas_request) > this->meas_interval)
     {
-        Serial.println("SDS Wakeup");
-        delay(2);
+        //Serial.println("SDS Wakeup");
         this->sds_sensor.wakeup();
         this->measurement_is_running = true;
         this->measurement_starting_time = current_millis;
@@ -56,7 +68,7 @@ bool SDS_Sensor_Helper::is_measurement_running(){
 
 
 bool SDS_Sensor_Helper::request_measure(unsigned long current_millis){
-    Serial.println("SDS Wakeup");
+    //Serial.println("SDS Wakeup");
     delay(2);
     this->sds_sensor.wakeup();
     this->measurement_is_running = true;
@@ -71,7 +83,7 @@ float SDS_Sensor_Helper::get_last_value(bool pm10){
 }
 
 
-float SDS_Sensor_Helper::get_average_value(bool pm10, bool _24h){
+float SDS_Sensor_Helper::get_value(bool pm10, bool _24h){
     if(_24h)
     {
         // get the last average for the last 24 hours
@@ -86,14 +98,14 @@ float SDS_Sensor_Helper::get_average_value(bool pm10, bool _24h){
     }
     else
     {
-        // get the average for the runtime of the device
+        // get the current value
         if(pm10)
         { 
-            return this->pm10_sum / this->runtime_meas_cnt;
+            return this->pm10_last_val ;
         }
         else
         { 
-            return this->pm25_sum / this->runtime_meas_cnt; 
+            return this->pm25_last_val ;
         }
     }
     
@@ -127,7 +139,7 @@ bool SDS_Sensor_Helper::is_measure_finished(unsigned long current_millis){
 
 void SDS_Sensor_Helper::do_measurement(){
     // do measurement and set SDS to sleep
-    Serial.println("SDS Measurement");
+    //Serial.println("SDS Measurement");
     int error = this->sds_sensor.read(&this->pm25_last_val, &this->pm10_last_val);
     if (!error) 
     {
@@ -158,7 +170,7 @@ void SDS_Sensor_Helper::do_measurement(){
     }
     else
     {
-        Serial.println("Error while SDS measure!");
+        Serial.println("SDS error");
     }
     this->sds_sensor.sleep();
 }

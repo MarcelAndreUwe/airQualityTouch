@@ -1,10 +1,14 @@
 #ifndef _WIFI_HELPER_H
 #define _WIFI_HELPER_H
 
-#include <ESP8266WiFi.h>
-//#include "C:/Users/Marcel/.platformio/packages/framework-arduinoespressif8266/libraries/ESP8266WiFi/src/ESP8266WiFi.h"
-#include "application/application_GSLC.h"
+//#include <ESP8266WiFi.h>
 
+#ifdef ESP32
+  #include <WiFi.h>
+#else
+ #include <ESP8266WiFi.h>
+#endif
+#include "application/application_GSLC.h"
 
 
 bool connecting = false;

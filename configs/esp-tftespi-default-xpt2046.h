@@ -98,7 +98,7 @@ extern "C" {
 
   // SD Card
   //#define ADAGFX_PIN_SDCS    2 // ESP8266 + Adafruit FeatherWing 2.4"
-  #define ADAGFX_PIN_SDCS     14 // ESP32   + Adafruit FeatherWing 2.4"
+  //#define ADAGFX_PIN_SDCS     14 // ESP32   + Adafruit FeatherWing 2.4"
   //#define ADAGFX_PIN_SDCS    5 // Others  + Adafruit FeatherWing 2.4"
 
   // -----------------------------------------------------------------------------
@@ -126,7 +126,11 @@ extern "C" {
   //   in TFT_eSPI's User_Setup.h is commented out.
 
   // Touch bus & pinout
-  #define XPT2046_CS     3
+  #ifdef ESP32
+    #define XPT2046_CS     21 //pin D21
+  #else
+    #define XPT2046_CS     16 //pin D0
+  #endif
   #define XPT2046_IRQ    255 // IRQ pin or 255 if no IRQ used
 
 
@@ -176,7 +180,7 @@ extern "C" {
   //   to indicate the initialization status, even during success.
   // - To disable the messages during successful initialization,
   //   uncomment the following line.
-  //#define INIT_MSG_DISABLE
+  #define INIT_MSG_DISABLE
 
   // -----------------------------------------------------------------------------
   // SECTION 6: Optional Features

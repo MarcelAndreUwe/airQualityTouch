@@ -10,7 +10,11 @@
 //<App !End!>
 
 //
-// ICONS:
+// +++ IntelliSense & PlatformIO +++
+// If you have trouble with the "code-assistence", then make sure that the right environment is selected.
+// Therefore follow the stepts for the "project environment switcher" discribed in: https://docs.platformio.org/en/latest/integration/ide/vscode.html#project-tasks
+//
+// +++ ICONS +++
 // First download a 32x32 icon (.png)
 // Optional: Change the color of the PNG image by uploading it to https://pinetools.com/colorize-image
 // Download the new colorized image as png
@@ -21,21 +25,82 @@
 //
 // Blue Color: Hex: 8cb6ff
 //
-
+// +++ Calibrate TFT +++
+// 1. Change in platformio.ini field src_dir to "examples/arduino/diag_ard_touch_calib"
+// 2. Flash code
+// 3. Follow instructions
+// 4. Copy calib. data info file "\configs\esp-tftespi-default-xpt2046.h"
+//
+// +++ TFT DRIVER & PINOUT +++
+// Pinout defined by TFT_eSPI's User_Setup.h ("\libdeps\ESP8266-TFT_eSPI-XPT2046\TFT_eSPI\User_Setup.h")
+// Setup for Rotation, calibration & features: "\configs\esp-tftespi-default-xpt2046.h" 
+//
+// FLASH MODE:  
+// use "DIO"-Flash mode to free up GPIO9 & 10, because SD_DATA2 and SD_DATA3 are not used in DIO-Mode!
+//
+// PINOUT ESP8266:
+// Display SDO/MISO  leave disconnected
+// Display LED       to NodeMCU pin SDD2 (also known as S2)
+// Display SCK       to NodeMCU pin D5
+// Display SDI/MOSI  to NodeMCU pin D7
+// Display DC (RS/AO)to NodeMCU pin D3
+// Display RESET     to NodeMCU pin RST
+// Display CS        to NodeMCU pin D8 
+// Display GND       to NodeMCU pin GND
+// Display VCC       to NodeMCU 5V or 3.3V
+// Touch CS          to NodeMCU pin D0 (GPIO 16)
+//
+//
+//
+// +++ CHANGE UI PROCEDURE +++
+// Open GUIscliceBuilder application and open project.
+// Save changes and build code: File -> Generate Code
+// Open generated code from /documents/arduino/Test2/
+// Copy the following code:
+//
+// ** application_GSLC.h **
+//      <Includes !Start!>            -->   <Includes !End!>
+//      <Enum !Start!>                -->   <Enum !End!>
+//      <ElementDefines !Start!>      -->   <ElementDefines !End!>
+//      <GUI_Extra_Elements !Start!>  -->   <GUI_Extra_Elements !End!>
+//      <Extern_References !Start!>   -->   <Extern_References !End!>
+//      Callback Methods
+//      <InitGUI !Start!>             -->   <Startup !End!>
+//
+// ** application.ino **
+//      <Save_References !Start!>     -->   <Save_References !End!>
+//      <Button Enums !Start!>        -->   Only new cases
+//      <Keypad Enums !Start!>        -->   Only new cases
+//      
 // ------------------------------------------------
 // Headers to include
 // ------------------------------------------------
-#include "application_GSLC.h"
-#include "C:/Users/Marcel/.platformio/packages/framework-arduinoespressif8266/libraries/ESP8266WiFi/src/ESP8266WiFi.h"
-//#include <SDS011.h>
-#include <string>
 
+#define ESP32
+
+#include <Arduino.h>
+#include "application_GSLC.h"
+#ifdef ESP32
+  #include <WiFi.h>
+  #define SDS_TX 17 // Pin ESP-TX2 auf SDS-Rx
+  #define SDS_RX 16 // Pin ESP-RX2 auf SDS-TX
+  const int tft_led_pin = 4; // Pin D4 = GPIO4
+#else
+  #include <ESP8266WiFi.h>
+  #define SDS_TX 16
+  #define SDS_RX 5
+  const int tft_led_pin = 10; // Pin SK = GPIO10
+#endif
+
+#include <string>
 #include "sds011_helper.h"
+#include <SPIFFS.h>
 
 
 
 #define IMG_BKGND_1               "/back.bmp"
 #define IMG_BKGND_2               "/back2.bmp"
+#define seconds() (millis()/1000)
 
 // ------------------------------------------------
 // Program Globals
@@ -46,22 +111,31 @@
 gslc_tsElemRef* m_pElemIn_PASSWORD= NULL;
 gslc_tsElemRef* m_pElemXRingGaugePM10= NULL;
 gslc_tsElemRef* m_pElemXRingGaugePM25= NULL;
+gslc_tsElemRef* m_pElem_INFO_BOX  = NULL;
 gslc_tsElemRef* m_pElem_Measuring = NULL;
 gslc_tsElemRef* m_pElem_WIFI_LIST = NULL;
 gslc_tsElemRef* m_pElem_aqi_val   = NULL;
 gslc_tsElemRef* m_pElem_btn_WIFI_setup= NULL;
 gslc_tsElemRef* m_pElem_btn_back_PG_WIFI_PWD= NULL;
+gslc_tsElemRef* m_pElem_btn_back_main_34= NULL;
+gslc_tsElemRef* m_pElem_btn_back_main_37= NULL;
+gslc_tsElemRef* m_pElem_btn_back_main_38= NULL;
 gslc_tsElemRef* m_pElem_btn_back_pg_wifi= NULL;
 gslc_tsElemRef* m_pElem_btn_dashboard= NULL;
+gslc_tsElemRef* m_pElem_btn_home  = NULL;
 gslc_tsElemRef* m_pElem_btn_info  = NULL;
 gslc_tsElemRef* m_pElem_btn_measure= NULL;
-gslc_tsElemRef* m_pElem_btn_setup = NULL;
 gslc_tsElemRef* m_pElem_con_msg   = NULL;
+gslc_tsElemRef* m_pElem_dimmer_timer= NULL;
+gslc_tsElemRef* m_pElem_enable_dimmer= NULL;
 gslc_tsElemRef* m_pElem_hum_val   = NULL;
 gslc_tsElemRef* m_pElem_img_nowifi= NULL;
 gslc_tsElemRef* m_pElem_img_wifi  = NULL;
 gslc_tsElemRef* m_pElem_label_measure_art= NULL;
+gslc_tsElemRef* m_pElem_label_measure_art38_39= NULL;
+gslc_tsElemRef* m_pElem_label_measure_art38_39_43= NULL;
 gslc_tsElemRef* m_pElem_label_pg_wifi_pwd= NULL;
+gslc_tsElemRef* m_pElem_meas_interval= NULL;
 gslc_tsElemRef* m_pElem_pm10_value= NULL;
 gslc_tsElemRef* m_pElem_pm25_value= NULL;
 gslc_tsElemRef* m_pElem_progress_measure= NULL;
@@ -69,8 +143,10 @@ gslc_tsElemRef* m_pElem_selected_ssid= NULL;
 gslc_tsElemRef* m_pElem_temp_value= NULL;
 gslc_tsElemRef* m_pElem_toggle_measure= NULL;
 gslc_tsElemRef* m_pElem_wifi_gauge= NULL;
+gslc_tsElemRef* m_pElemKeyPadNum  = NULL;
 gslc_tsElemRef* m_pElemKeyPadAlpha= NULL;
 //<Save_References !End!>
+
 
 // Define debug message function
 static int16_t DebugOut(char ch) { if (ch == (char)'\n') Serial.println(""); else Serial.write(ch); return 0; }
@@ -81,6 +157,7 @@ char ip_address[16];
 bool connecting = false;
 //SDS011 sds;
 float pm10, pm25;
+
 
 SDS_Sensor_Helper sds_sensor;
 
@@ -109,7 +186,17 @@ unsigned long request_time = 0;
 bool measure_request = false;
 int error = 0;
 
+unsigned long lastTouchEvent = 0;
+unsigned long interval_dimmer = 20000; // default 20sec dimmer timer
+bool dimmerActivated = false;
+
+
+
 void show_value(bool pm10_val=false);
+void printCSV();
+void resetCSV();
+void showInfo();
+size_t getCSVsize();
 
 #define background_color (gslc_tsColor) {0, 228, 171}
 
@@ -128,9 +215,13 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
   gslc_tsElem*    pElem    = gslc_GetElemFromRef(pGui,pElemRef);
 
   if ( eTouch == GSLC_TOUCH_UP_IN ) {
+    if(dimmerActivated){
+      lastTouchEvent = millis();
+    }
+
     // From the element's ID we can determine which button was pressed.
     switch (pElem->nId) {
-//<Button Enums !Start!>
+      //<Button Enums !Start!>
       case E_ELEM_BTN_WIFI_SETUP:
         gslc_SetPageCur(&m_gui, E_PG_WIFI);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
@@ -138,6 +229,12 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 
       case E_ELEM_BTN_dashboard:
         gslc_SetPageCur(&m_gui, E_PG_OVERVIEW);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        break;
+
+      case E_ELEM_BTN_INFO:	
+        showInfo();
+        gslc_SetPageCur(&m_gui, E_PG_INFO);	
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
         break;
 
@@ -169,12 +266,10 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
 
       case E_ELEM_TOGGLE_MEASURE:
-        // TODO Add code for Toggle button ON/OFF state
         if (gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_measure)) {
           show_24h_average = true;
           show_value(true);
           show_value(false);
-
         }
         else{
           show_24h_average = false;
@@ -183,14 +278,66 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         }
         break;
 
-      case E_ELEM_SETTINGS_BTN:
+      case E_ELEM_HOME_BTN:
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
         break;
 
       case E_ELEM_MEASURE_BTN:
+        // TODO: Add code for manual measure trigger
         break;
-//<Button Enums !End!>
+
+      case E_ELEM_BTN_SYSTEM_SETTINGS:	
+        gslc_SetPageCur(&m_gui, E_PG_SYSTEM_SETTINGS);	
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        break;	
+
+      case E_ELEM_BTN_IOT_SETTINGS:	
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        break;	
+      case E_ELEM_DIMMER_TIMER:	
+        // Clicked on edit field, so show popup box and associate with this text field	
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElem_dimmer_timer);	
+        break;	
+      case E_ELEM_ENABLE_DIMMER:
+        dimmerActivated = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_enable_dimmer);
+        break;	
+
+      case E_ELEM_DIM_ON:	
+        setBacklight(false);
+        break;	
+
+      case E_ELEM_MEAS_INTERVAL:	
+        // Clicked on edit field, so show popup box and associate with this text field	
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElem_meas_interval);	
+        break;	
+
+      case E_ELEM_DIM_OFF:	
+        gslc_PopupHide(&m_gui);	
+        setBacklight(true);
+        break;
+
+      case E_ELEM_BACK34:
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        break;
+      case E_ELEM_BACK37:
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        break;
+      case E_ELEM_BACK38:
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        break;
+      
+      case E_ELEM_DEL_DATA:
+        resetCSV();
+        break;
+      case E_ELEM_PRINT_DATA:
+        printCSV();
+        break;
+
+      //<Button Enums !End!>
       default:
         break;
     }
@@ -215,10 +362,17 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
     //   the corresponding value field
     switch (nTargetElemId) {
 //<Keypad Enums !Start!>
-
       case E_ELEM_PSWD_INPUT:
         strcpy(password,gslc_ElemXKeyPadInputGet(pGui, m_pElemIn_PASSWORD, pvData));
-	    gslc_PopupHide(&m_gui);
+	      gslc_PopupHide(&m_gui);
+        break;
+      case E_ELEM_DIMMER_TIMER:	
+        gslc_ElemXKeyPadInputGet(pGui, m_pElem_dimmer_timer, pvData);	
+	      gslc_PopupHide(&m_gui);	
+        break;	
+      case E_ELEM_MEAS_INTERVAL:	
+        gslc_ElemXKeyPadInputGet(pGui, m_pElem_meas_interval, pvData);
+        gslc_PopupHide(&m_gui);
         break;
 //<Keypad Enums !End!>
       default:
@@ -314,19 +468,28 @@ bool connect_wifi(const char *wifi_name)
     strncpy(msg,"Connecting ",12);
     gslc_ElemSetTxtStr(&m_gui, m_pElem_con_msg, msg);
     WiFi.begin(ssid, password);
-    
     connecting = true;
-
     return true;
+}
+
+void showInfo(){
+  // Print text to info-textbox
+  gslc_ElemXTextboxReset(&m_gui,m_pElem_INFO_BOX);
+  //m_acTextboxBuf1 [200];
+  String text = "Uptime: " + String(seconds()) + "sec.\nFree DRAM: " + String(ESP.getFreeHeap()/1000) + " KB\nMeas count: " + String(sds_sensor.get_measure_cnt()) + "\nData.csv size: " + String(getCSVsize()) + " KB\n";
+  //snprintf(m_acTextboxBuf1,200,(char*)"Uptime: %u sec.\nFree DRAM: %i kb\ndata.csv: %i kb\nMeas count: %u\n", seconds(), ESP.getFreeHeap()/1000, getCSVsize(), sds_sensor.get_measure_cnt(false));
+  //snprintf(m_acTextboxBuf1,600,text.c_str());
+  gslc_ElemXTextboxAdd(&m_gui,m_pElem_INFO_BOX,(char*)text.c_str());
+  delay(100);
 }
 
 
 void show_value(bool pm10_val){
-  ret = snprintf(buff, 10, "%f", sds_sensor.get_average_value(pm10_val, show_24h_average));
+  ret = snprintf(buff, 10, "%f", sds_sensor.get_value(pm10_val, show_24h_average));
   if(pm10_val){
     gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_value, buff);
-    if((int)sds_sensor.get_average_value(pm10_val, show_24h_average) > 1.5){
-        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, (int)sds_sensor.get_average_value(pm10_val, show_24h_average));
+    if((int)sds_sensor.get_value(pm10_val, show_24h_average) > 1.5){
+        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, (int)sds_sensor.get_value(pm10_val, show_24h_average));
     }
     else{
         // To show a littlebit green
@@ -335,8 +498,8 @@ void show_value(bool pm10_val){
   }
   else{
     gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_value, buff);
-    if((int)sds_sensor.get_average_value(pm10_val, show_24h_average) > 1.5){
-        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, (int)sds_sensor.get_average_value(pm10_val, show_24h_average));
+    if((int)sds_sensor.get_value(pm10_val, show_24h_average) > 1.5){
+        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, (int)sds_sensor.get_value(pm10_val, show_24h_average));
     }
     else{
         // To show a littlebit green
@@ -345,31 +508,120 @@ void show_value(bool pm10_val){
   }
 }
 
+void updateCSV(unsigned long currentSec){
+  delay(100);
+  fs::File file = SPIFFS.open("/data.csv", "a");
+  file.printf("%u,", currentSec);
+  file.printf("%.2f,", sds_sensor.get_value(true,false));
+  file.printf("%.2f \n", sds_sensor.get_value(false, false));
+  file.close();
+}
+
+size_t getCSVsize(){
+  // To get the size of the csv file in KB.
+  fs::File file = SPIFFS.open("/data.csv", "r");
+  size_t size = file.size();
+  file.close();
+  return (size / 1000);
+}
+
+void printCSV(){
+  Serial.println("\n============================================");
+  Serial.println("========   Measurement data START   ========");
+  Serial.println("============================================\n\n");
+
+  fs::File file = SPIFFS.open("/data.csv", "r");
+  while(file.available()){
+    Serial.write(file.read());
+  }
+  file.close();
+  Serial.println("\n\n============================================");
+  Serial.println("========    Measurement data END    ========");
+  Serial.println("============================================\n\n");
+
+  delay(1000);
+}
+
+void resetCSV(){
+  SPIFFS.remove("/data.csv");
+  delay(100);
+  fs::File file = SPIFFS.open("/data.csv", "w");
+  file.printf("relative_time,pm10,pm25\n");
+  file.close();
+  delay(100);
+}
+
+void setBacklight(bool state){
+  // To enable/disable the TFT backlight LED
+  if (state){
+    digitalWrite(tft_led_pin, HIGH);
+  }
+  else{
+    digitalWrite(tft_led_pin, LOW);
+    gslc_PopupShow(&m_gui, E_PG_POPUP_DIMMER, true);	
+  }
+  
+  
+}
+
+void handleDimmer(unsigned long _currentMillis){
+  if(dimmerActivated && (_currentMillis - lastTouchEvent) > interval_dimmer){
+    setBacklight(false);
+  }
+}
+
+
+
 void setup()
 { 
-    sds_sensor.setup(16, 5, interval_heatup, interval);
+    Serial.begin(2400);
+    delay(1000);
+    Serial.println(">>> Starting setup procedure");
+    delay(1000);
+    sds_sensor.setup(SDS_TX, SDS_RX, interval_heatup, interval);
+
     delay(500);
-    Serial.begin(9600);
     // Wait for USB Serial 
     //delay(1000);  // NOTE: Some devices require a delay after Serial.begin() before serial port can be used
-
+    pinMode(tft_led_pin, OUTPUT);
+    setBacklight(true);
+    //delay(1000);
     gslc_InitDebug(&DebugOut);
-
+    delay(500);
     InitGUIslice_gen();
-
+    delay(2000);
+    
+    Serial.println("Setup data.csv");
+    
+    if(SPIFFS.exists("/data.csv")){
+      fs::File file = SPIFFS.open("/data.csv", "a");
+      file.printf("\n\n\n+++   RESTART - NEW DATASET   +++\n\n");
+      file.printf("relative_time,pm10,pm25\n");
+      file.close();
+    }
+    else{
+      fs::File file = SPIFFS.open("/data.csv", "w");
+      file.printf("relative_time,pm10,pm25\n");
+      file.close();
+    }
+    
+    
+ 
     
     // Hide images and disable image-button glow (to avoid slow rendering)
     gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
     gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, false);
     gslc_ElemSetVisible(&m_gui, m_pElem_img_wifi, false );
     gslc_ElemSetVisible(&m_gui, m_pElem_wifi_gauge, false);
-    gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_setup,false);
+    gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_home,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_measure,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_back_PG_WIFI_PWD,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_dashboard,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_WIFI_setup,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_info,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_back_pg_wifi,false);
+    delay(1000);
+    Serial.println(">>> Setup finished <<<");
 }
 
 // -----------------------------------
@@ -377,11 +629,11 @@ void setup()
 // -----------------------------------
 void loop()
 {
-
     // ------------------------------------------------
     // Update GUI Elements
     // ------------------------------------------------
-        
+
+     
     if (scanning_wifi && found_networks < 0 ){
       // WiFi scan requested but not finished or started
 
@@ -467,10 +719,10 @@ void loop()
             cnt = 0;
         }
     }
-
+    
     currentMillis = millis();
 
-
+    
     if(sds_sensor.update(currentMillis))
     {
       // new meas-values available
@@ -485,28 +737,10 @@ void loop()
       // handle values
       show_value(true);
       show_value(false);
-
-      
-      Serial.print("Last PM 10 Measure: " );
-      Serial.println(String(sds_sensor.get_last_value(true)));
-      Serial.print("Last PM 25 Measure:" );
-      Serial.println(String(sds_sensor.get_last_value(false)));
-      Serial.print("Average PM 10 (24h): " );
-      Serial.println(String(sds_sensor.get_average_value(true, true)));
-      Serial.print("Average PM 25 (24h):"); 
-      Serial.println(String(sds_sensor.get_average_value(false, true)));
-      Serial.print("Average PM 10 (runtime): "); 
-      Serial.println(String(sds_sensor.get_average_value(true, false)));
-      Serial.print("Average PM 25 (runtime):" );
-      Serial.println(String(sds_sensor.get_average_value(false, false)));
-      Serial.print("Meas count (last 24h):" );
-      Serial.println(String(sds_sensor.get_measure_cnt(true)));
-      Serial.print("Meas count (runtime):"); 
-      Serial.println(String(sds_sensor.get_measure_cnt(false)));
+      updateCSV(seconds());
     }
-
     else{
-      if(sds_sensor.is_measurement_running() == true)
+      if(sds_sensor.is_measurement_running())
       {
           // Progressbar animation while SDS-Sensor measurement
           gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, true);
@@ -541,7 +775,7 @@ void loop()
       }
     }
     
-      
+    handleDimmer(currentMillis);
     // ------------------------------------------------
     // Periodically call GUIslice update function
     // ------------------------------------------------

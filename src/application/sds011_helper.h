@@ -1,9 +1,19 @@
 #ifndef _SDS011_HELPER_H
 #define _SDS011_HELPER_H
 
-
+#include <Arduino.h>
 #include <stdint.h>
-#include "../.pio/libdeps/ESP8266-TFT_eSPI-XPT2046/SDS011 sensor Library/SDS011.h"
+#include <SDS011.h>
+/*
+#ifdef ESP32
+  #include "../.pio/libdeps/ESP32-TFT_eSPI-XPT2046/SDS011 sensor Library/SDS011.h"
+  #include <SDS011.h>
+#else
+  #include "../.pio/libdeps/ESP8266-TFT_eSPI-XPT2046/SDS011 sensor Library/SDS011.h"
+
+#endif
+*/
+	
 
 
 class SDS_Sensor_Helper
@@ -17,7 +27,7 @@ class SDS_Sensor_Helper
     @param rx_pin RX Pin
     @param wakeup_time Time in ms how long the sensor should take for wakeup
     @param meas_interval Time in ms for the interval of measurements
-    */                             
+    */
     void setup(int tx_pin, int rx_pin, unsigned long wakeup_time, unsigned long meas_interval);  
 
     /*
@@ -34,7 +44,7 @@ class SDS_Sensor_Helper
     /*
     Returns the average value for the device-runtime or the last 24h
     */
-    float get_average_value(bool pm10=false, bool _24h=true); 
+    float get_value(bool pm10=false, bool _24h=true); 
 
     /*
     Returns the count of measurements for the last 24h or device runtime
@@ -83,7 +93,7 @@ class SDS_Sensor_Helper
     float pm10_last_24h_average;        // last average value for the last 24h
     float pm25_last_24h_average;        // last average value for the last 24h
     uint32_t runtime_meas_cnt;          // counts the measurements since device is started
-    uint16_t meas_cnt_24h;              // counts the measurements for the last 24 hours
+    unsigned long meas_cnt_24h;              // counts the measurements for the last 24 hours
     unsigned long wakeup_time;          // (millis) interval how long the SDS-sensor should need for wake up 
     unsigned long measurement_starting_time; // (millis) when measurement was requested, to calculate when wake-up interval has expired
     unsigned long last_meas_request;    // (millis) last time when a measurement was requested 
