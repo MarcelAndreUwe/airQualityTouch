@@ -1,39 +1,35 @@
-//#include "../src/application/sds011_helper.h"
 #include "sds011_helper.h"
 #include <stdint.h>
 #include <Arduino.h>
 
-//#include <HardwareSerial.h>
-
-#define ESP32
 SDS_Sensor_Helper::SDS_Sensor_Helper(void){}
 
-    void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, unsigned long meas_interval){
-        this->pm10_sum = 0.0;
-        this->pm25_sum = 0.0;
-        this->pm10_last_val = 0.0;
-        this->pm25_last_val = 0.0;
-        this->pm10_sum_24h = 0.0;
-        this->pm25_sum_24h = 0.0;
-        this->pm10_last_24h_average = 0.0;
-        this->pm25_last_24h_average = 0.0;
-        this->runtime_meas_cnt = 0;    
-        this->meas_cnt_24h = 0;
-        #ifdef ESP32
-            // ESP32 must use HardwareSerial
-            this->sds_sensor.begin(&Serial2);
-            delay(100);
-            this->sds_sensor.sleep();
-        #else
-            this->sds_sensor.begin(rx_pin, tx_pin); 
-            delay(100);
-            this->sds_sensor.sleep();
-        #endif
-        this->measurement_is_running = false;
-        this->wakeup_time = wakeup_time;
-        this->measurement_starting_time = 0;
-        this->meas_interval = meas_interval;
-    }
+void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval){
+    this->pm10_sum = 0.0;
+    this->pm25_sum = 0.0;
+    this->pm10_last_val = 0.0;
+    this->pm25_last_val = 0.0;
+    this->pm10_sum_24h = 0.0;
+    this->pm25_sum_24h = 0.0;
+    this->pm10_last_24h_average = 0.0;
+    this->pm25_last_24h_average = 0.0;
+    this->runtime_meas_cnt = 0;    
+    this->meas_cnt_24h = 0;
+    #ifdef ESP32
+        // ESP32 must use HardwareSerial
+        this->sds_sensor.begin(&Serial2);
+        delay(1000);
+        this->sds_sensor.sleep();
+    #else
+        this->sds_sensor.begin(rx_pin, tx_pin); 
+        delay(100);
+        this->sds_sensor.sleep();
+    #endif
+    this->measurement_is_running = false;
+    this->wakeup_time = wakeup_time;
+    this->measurement_starting_time = 0;
+    this->meas_interval = meas_interval;
+}
 
 bool SDS_Sensor_Helper::update(unsigned long current_millis){
     bool ret = false;
@@ -176,9 +172,12 @@ void SDS_Sensor_Helper::do_measurement(){
 }
 
 
-void SDS_Sensor_Helper::set_measure_interval(unsigned long interval_ms){
+void SDS_Sensor_Helper::set_measure_interval(int interval_ms){
     this->meas_interval = interval_ms;
 }
 
+int SDS_Sensor_Helper::get_interval_sec(){
+    return (this->meas_interval * 1000);
+}
 
 

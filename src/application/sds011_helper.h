@@ -4,16 +4,6 @@
 #include <Arduino.h>
 #include <stdint.h>
 #include <SDS011.h>
-/*
-#ifdef ESP32
-  #include "../.pio/libdeps/ESP32-TFT_eSPI-XPT2046/SDS011 sensor Library/SDS011.h"
-  #include <SDS011.h>
-#else
-  #include "../.pio/libdeps/ESP8266-TFT_eSPI-XPT2046/SDS011 sensor Library/SDS011.h"
-
-#endif
-*/
-	
 
 
 class SDS_Sensor_Helper
@@ -28,7 +18,7 @@ class SDS_Sensor_Helper
     @param wakeup_time Time in ms how long the sensor should take for wakeup
     @param meas_interval Time in ms for the interval of measurements
     */
-    void setup(int tx_pin, int rx_pin, unsigned long wakeup_time, unsigned long meas_interval);  
+    void setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval);  
 
     /*
     To start a measurement.
@@ -61,7 +51,7 @@ class SDS_Sensor_Helper
     Set the interval for measurements. 
     Only for internal calculation of the 24 hour average value.
     */
-    void set_measure_interval(unsigned long interval_ms);
+    void set_measure_interval(int interval_ms);
 
     /*
     Check if new measurement is necessary
@@ -70,7 +60,8 @@ class SDS_Sensor_Helper
     bool update(unsigned long current_millis);
 
     bool is_measurement_running();
-
+    
+    int get_interval_sec();
 
 
 
@@ -97,7 +88,7 @@ class SDS_Sensor_Helper
     unsigned long wakeup_time;          // (millis) interval how long the SDS-sensor should need for wake up 
     unsigned long measurement_starting_time; // (millis) when measurement was requested, to calculate when wake-up interval has expired
     unsigned long last_meas_request;    // (millis) last time when a measurement was requested 
-    unsigned long meas_interval;        // Interval for measurements, only for internal calculations
+    int meas_interval;                 // Interval for measurements, only for internal calculations
     unsigned long hour_ms = 1000*60*60; // For internal calculations only
 };
 
