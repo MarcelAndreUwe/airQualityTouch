@@ -32,7 +32,9 @@
 // 4. Copy calib. data info file "\configs\esp-tftespi-default-xpt2046.h"
 //
 // +++ TFT DRIVER & PINOUT +++
-// Pinout defined by TFT_eSPI's User_Setup.h ("\libdeps\ESP8266-TFT_eSPI-XPT2046\TFT_eSPI\User_Setup.h")
+// Pinout defined by TFT_eSPI's User_Setup.h ("\libdeps\ESP8266-TFT_eSPI-XPT2046\TFT_eSPI\User_Setup.h") 
+// --> Only use platformio.ini to change pin configuration!!!
+
 // Setup for Rotation, calibration & features: "\configs\esp-tftespi-default-xpt2046.h" 
 //
 // FLASH MODE:  
@@ -94,8 +96,11 @@
 
 #include <string>
 #include "sds011_helper.h"
+#include "iot_helper.h"
 #include <SPIFFS.h>
-
+#include <ESP32Time.h>
+#include <iostream>
+#include <rom/rtc.h>
 
 
 #define IMG_BKGND_1               "/back.bmp"
@@ -108,32 +113,37 @@
 
 // Save some element references for direct access
 //<Save_References !Start!>
+gslc_tsElemRef* m_pElemDay        = NULL;
+gslc_tsElemRef* m_pElemHour       = NULL;
 gslc_tsElemRef* m_pElemIn_PASSWORD= NULL;
+gslc_tsElemRef* m_pElemMinute     = NULL;
+gslc_tsElemRef* m_pElemMonth      = NULL;
 gslc_tsElemRef* m_pElemXRingGaugePM10= NULL;
 gslc_tsElemRef* m_pElemXRingGaugePM25= NULL;
-gslc_tsElemRef* m_pElem_INFO_BOX  = NULL;
+gslc_tsElemRef* m_pElemYear       = NULL;
 gslc_tsElemRef* m_pElem_Measuring = NULL;
 gslc_tsElemRef* m_pElem_WIFI_LIST = NULL;
 gslc_tsElemRef* m_pElem_aqi_val   = NULL;
+gslc_tsElemRef* m_pElem_back_WIFI_PWD= NULL;
+gslc_tsElemRef* m_pElem_back_iot  = NULL;
+gslc_tsElemRef* m_pElem_back_info= NULL;
+gslc_tsElemRef* m_pElem_back_pg_wifi= NULL;
+gslc_tsElemRef* m_pElem_back_sysset= NULL;
+gslc_tsElemRef* m_pElem_back_time = NULL;
 gslc_tsElemRef* m_pElem_btn_WIFI_setup= NULL;
-gslc_tsElemRef* m_pElem_btn_back_PG_WIFI_PWD= NULL;
-gslc_tsElemRef* m_pElem_btn_back_main_34= NULL;
-gslc_tsElemRef* m_pElem_btn_back_main_37= NULL;
-gslc_tsElemRef* m_pElem_btn_back_main_38= NULL;
-gslc_tsElemRef* m_pElem_btn_back_pg_wifi= NULL;
 gslc_tsElemRef* m_pElem_btn_dashboard= NULL;
 gslc_tsElemRef* m_pElem_btn_home  = NULL;
 gslc_tsElemRef* m_pElem_btn_info  = NULL;
 gslc_tsElemRef* m_pElem_btn_measure= NULL;
+gslc_tsElemRef* m_pElem_btn_save_time= NULL;
 gslc_tsElemRef* m_pElem_con_msg   = NULL;
 gslc_tsElemRef* m_pElem_dimmer_timer= NULL;
-gslc_tsElemRef* m_pElem_enable_dimmer= NULL;
 gslc_tsElemRef* m_pElem_hum_val   = NULL;
 gslc_tsElemRef* m_pElem_img_nowifi= NULL;
 gslc_tsElemRef* m_pElem_img_wifi  = NULL;
+gslc_tsElemRef* m_pElem_infobox   = NULL;
 gslc_tsElemRef* m_pElem_label_measure_art= NULL;
 gslc_tsElemRef* m_pElem_label_measure_art38_39= NULL;
-gslc_tsElemRef* m_pElem_label_measure_art38_39_43= NULL;
 gslc_tsElemRef* m_pElem_label_pg_wifi_pwd= NULL;
 gslc_tsElemRef* m_pElem_meas_interval= NULL;
 gslc_tsElemRef* m_pElem_pm10_value= NULL;
@@ -141,6 +151,9 @@ gslc_tsElemRef* m_pElem_pm25_value= NULL;
 gslc_tsElemRef* m_pElem_progress_measure= NULL;
 gslc_tsElemRef* m_pElem_selected_ssid= NULL;
 gslc_tsElemRef* m_pElem_temp_value= NULL;
+gslc_tsElemRef* m_pElem_toggle_IoT= NULL;
+gslc_tsElemRef* m_pElem_toggle_csv= NULL;
+gslc_tsElemRef* m_pElem_toggle_dimmer= NULL;
 gslc_tsElemRef* m_pElem_toggle_measure= NULL;
 gslc_tsElemRef* m_pElem_wifi_gauge= NULL;
 gslc_tsElemRef* m_pElemKeyPadNum  = NULL;
@@ -155,19 +168,30 @@ char ssid[MAX_STR];
 char password[MAX_STR];
 char ip_address[16];
 bool connecting = false;
-//SDS011 sds;
-float pm10, pm25;
+char my_losant_webhook_url [] = "https://triggers.losant.com/webhooks/eAPNEsTpunTnn0AC5yuCfR54GbFXdFU8hxSUKYwL";
+
+
 
 
 SDS_Sensor_Helper sds_sensor;
+IoT_Helper IoT_webhook;
+ESP32Time rtc;  
 
 int cnt = 1;
 int cnt2 = 1;
 int r1 = 0;
 int r2 = 50;
 int cnt3 = 1;
+int t_minute = 0;
+int t_hour = 1;
+int year = 2022;
+int month = 6;
+int day = 6;
+
 bool r1_ = false;
 bool r2_ = false;
+bool store_csv = false;
+bool do_upload = true;
 
 int found_networks = -5;
 bool scanning_wifi = false;
@@ -178,7 +202,7 @@ int loading_anim_val = 0;
 const char* pnt = ".";
 char buff[10];
 int ret;
-const unsigned long interval = 60000; // 1 minute
+int interval = 60000; // 1 minute
 unsigned long interval_heatup = 20000; // 20sec wakeup intervall
 unsigned long lastMeasure = 0;
 unsigned long currentMillis;
@@ -196,12 +220,14 @@ void show_value(bool pm10_val=false);
 void printCSV();
 void resetCSV();
 void showInfo();
+void setCSV(bool enable);
 size_t getCSVsize();
+bool connect_wifi(const char *wifi_name);
+void setBacklight(bool state);
 
 #define background_color (gslc_tsColor) {0, 228, 171}
 
 
-bool connect_wifi(const char *wifi_name);
 
 // ------------------------------------------------
 // Callback Methods
@@ -222,50 +248,50 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
     // From the element's ID we can determine which button was pressed.
     switch (pElem->nId) {
       //<Button Enums !Start!>
-      case E_ELEM_BTN_WIFI_SETUP:
+      case E_ELEM_BTN_WIFI_SETUP:{
         gslc_SetPageCur(&m_gui, E_PG_WIFI);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
-        break;
+        break;}
 
-      case E_ELEM_BTN_dashboard:
+      case E_ELEM_BTN_dashboard:{
         gslc_SetPageCur(&m_gui, E_PG_OVERVIEW);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
-        break;
+        break;}
 
-      case E_ELEM_BTN_INFO:	
+      case E_ELEM_BTN_INFO:	{
         showInfo();
         gslc_SetPageCur(&m_gui, E_PG_INFO);	
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
-        break;
+        break;}
 
-      case E_ELEM_BTN_SCAN_WIFI:
+      case E_ELEM_BTN_SCAN_WIFI:{
         scanning_wifi = true;
-        break;
+        break;}
 
-      case E_ELEM_BTN_WIFI_CONNECT:
+      case E_ELEM_BTN_WIFI_CONNECT:{
         gslc_SetPageCur(&m_gui, E_PG_WIFI_PSWD);
-        break;
+        break;}
 
-      case E_ELEM_BTN_BACK_PG_WIFI:
+      case E_ELEM_BACK_PG_WIFI:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-        break;
+        break;}
 
-      case E_ELEM_PSWD_INPUT:
+      case E_ELEM_PSWD_INPUT:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadAlpha, E_POP_KEYPAD_ALPHA, m_pElemIn_PASSWORD);
-        break;
+        break;}
 
-      case E_ELEM_BTN_CONNECT:
+      case E_ELEM_BTN_CONNECT:{
         connect_wifi(ssid);
-        break;
+        break;}
 
-      case E_ELEM_BTN_BACK_PG_WIFI_PWD:
+      case E_ELEM_BACK_WIFI_PWD:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-        break;
+        break;}
 
-      case E_ELEM_TOGGLE_MEASURE:
+      case E_ELEM_TOGGLE_MEASURE:{
         if (gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_measure)) {
           show_24h_average = true;
           show_value(true);
@@ -276,67 +302,126 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
           show_value(true);
           show_value(false);
         }
-        break;
+        break;}
 
-      case E_ELEM_HOME_BTN:
+      case E_ELEM_HOME_BTN:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-        break;
+        break;}
 
-      case E_ELEM_MEASURE_BTN:
-        // TODO: Add code for manual measure trigger
-        break;
+      case E_ELEM_MEASURE_BTN:{
+        int ret = IoT_webhook.send_pm_update(sds_sensor.get_last_value(true), sds_sensor.get_last_value(false), 10,05);
+        Serial.print("Return code: ");
+        Serial.println(ret);
+        break;}
 
-      case E_ELEM_BTN_SYSTEM_SETTINGS:	
-        gslc_SetPageCur(&m_gui, E_PG_SYSTEM_SETTINGS);	
+      case E_ELEM_BTN_SYS_SET:{	
+        gslc_SetPageCur(&m_gui, E_PG_SYS_SET);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
-        break;	
+        break;	}
 
-      case E_ELEM_BTN_IOT_SETTINGS:	
+      case E_ELEM_BTN_IOT_SET:{	
+        gslc_SetPageCur(&m_gui, E_PG_IOT_SET);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
-        break;	
-      case E_ELEM_DIMMER_TIMER:	
+        break;	}
+
+      case E_ELEM_DIMMER_TIMER:	{
         // Clicked on edit field, so show popup box and associate with this text field	
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElem_dimmer_timer);	
-        break;	
-      case E_ELEM_ENABLE_DIMMER:
-        dimmerActivated = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_enable_dimmer);
-        break;	
+        break;	}
+
+      case E_ELEM_TOGGLE_DIMMER:{
+        dimmerActivated = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_dimmer);
+        break;	}
 
       case E_ELEM_DIM_ON:	
         setBacklight(false);
         break;	
 
-      case E_ELEM_MEAS_INTERVAL:	
+      case E_ELEM_MEAS_INTERVAL:{	
         // Clicked on edit field, so show popup box and associate with this text field	
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElem_meas_interval);	
-        break;	
+        break;}
 
-      case E_ELEM_DIM_OFF:	
+      case E_ELEM_DIM_OFF:{	
         gslc_PopupHide(&m_gui);	
         setBacklight(true);
-        break;
+        break;}
 
-      case E_ELEM_BACK34:
-        gslc_SetPageCur(&m_gui, E_PG_MAIN);
-        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-        break;
-      case E_ELEM_BACK37:
-        gslc_SetPageCur(&m_gui, E_PG_MAIN);
-        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
-        break;
-      case E_ELEM_BACK38:
+      case E_ELEM_BACK_IOT:
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
         break;
       
-      case E_ELEM_DEL_DATA:
-        resetCSV();
-        break;
-      case E_ELEM_PRINT_DATA:
-        printCSV();
-        break;
 
+      case E_ELEM_BACK_SYSSET:{
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        break;}
+
+      case E_ELEM_BACK_INFO:{
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        break;}
+      
+      case E_ELEM_DEL_DATA:{
+        resetCSV();
+        break;}
+
+      case E_ELEM_PRINT_DATA:{
+        printCSV();
+        break;}
+
+      case E_ELEM_TOGGLE_CSV:{
+        setCSV(gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_csv));
+        break;}
+
+      case E_ELEM_TOGGLE_IOT:{
+        do_upload = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_IoT);
+        break;}
+      
+      case E_ELEM_BTN_SETTIME:{
+        gslc_SetPageCur(&m_gui, E_PG_TIME);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        break;}
+
+      case E_ELEM_NUM_MONTH:{
+        // Clicked on edit field, so show popup box and associate with this text field
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemMonth);
+        break;}
+
+      case E_ELEM_NUM_DAY:{
+        // Clicked on edit field, so show popup box and associate with this text field
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemDay);
+        break;}
+
+      case E_ELEM_NUM_YEAR:{
+        // Clicked on edit field, so show popup box and associate with this text field
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemYear);
+        break;}
+
+      case E_ELEM_NUM_HOUR:{
+        // Clicked on edit field, so show popup box and associate with this text field
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemHour);
+        break;}
+
+      case E_ELEM_NUM_MINUTE:{
+        // Clicked on edit field, so show popup box and associate with this text field
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemMinute);
+        break;}
+
+      case E_ELEM_BACK_TIME:{
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        break;}
+
+      case E_ELEM_BTN_SAVE_TIME:{
+        Serial.printf("Set RTC time = %i:%i  |  Date = %i/%i/%i\n",t_hour, t_minute, day, month, year);
+        rtc.setTime(0, t_minute, t_hour, day, month, year);
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        break;}
+      
       //<Button Enums !End!>
       default:
         break;
@@ -361,7 +446,7 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
     // - If we have a popup active, pass the return value directly to
     //   the corresponding value field
     switch (nTargetElemId) {
-//<Keypad Enums !Start!>
+
       case E_ELEM_PSWD_INPUT:
         strcpy(password,gslc_ElemXKeyPadInputGet(pGui, m_pElemIn_PASSWORD, pvData));
 	      gslc_PopupHide(&m_gui);
@@ -371,10 +456,31 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
 	      gslc_PopupHide(&m_gui);	
         break;	
       case E_ELEM_MEAS_INTERVAL:	
-        gslc_ElemXKeyPadInputGet(pGui, m_pElem_meas_interval, pvData);
+        sds_sensor.set_measure_interval(atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElem_meas_interval, pvData)) * 60000);
         gslc_PopupHide(&m_gui);
         break;
-//<Keypad Enums !End!>
+      
+      case E_ELEM_NUM_MONTH:
+        month = atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElemMonth, pvData));
+	      gslc_PopupHide(&m_gui);
+        break;
+      case E_ELEM_NUM_DAY:
+        day = atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElemDay, pvData));
+	      gslc_PopupHide(&m_gui);
+        break;
+      case E_ELEM_NUM_YEAR:
+        year = atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElemYear, pvData));
+	      gslc_PopupHide(&m_gui);
+        break;
+      case E_ELEM_NUM_HOUR:
+        t_hour = atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElemHour, pvData));
+	      gslc_PopupHide(&m_gui);
+        break;
+      case E_ELEM_NUM_MINUTE:
+        t_minute = atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElemMinute, pvData));
+	      gslc_PopupHide(&m_gui);
+        break;
+
       default:
         break;
     }
@@ -472,15 +578,60 @@ bool connect_wifi(const char *wifi_name)
     return true;
 }
 
+String getResetReason(RESET_REASON reason){
+  // Helper function to return reset reason
+  switch (reason)
+  {
+    case 1 : return "POWERON_RESET";          /**<1,  Vbat power on reset*/
+    case 3 : return "SW_RESET";               /**<3,  Software reset digital core*/
+    case 4 : return "OWDT_RESET";             /**<4,  Legacy watch dog reset digital core*/
+    case 5 : return "DEEPSLEEP_RESET";        /**<5,  Deep Sleep reset digital core*/
+    case 6 : return "SDIO_RESET";             /**<6,  Reset by SLC module, reset digital core*/
+    case 7 : return "TG0WDT_SYS_RESET";       /**<7,  Timer Group0 Watch dog reset digital core*/
+    case 8 : return "TG1WDT_SYS_RESET";       /**<8,  Timer Group1 Watch dog reset digital core*/
+    case 9 : return "RTCWDT_SYS_RESET";       /**<9,  RTC Watch dog Reset digital core*/
+    case 10 : return "INTRUSION_RESET";       /**<10, Instrusion tested to reset CPU*/
+    case 11 : return "TGWDT_CPU_RESET";       /**<11, Time Group reset CPU*/
+    case 12 : return "SW_CPU_RESET";          /**<12, Software reset CPU*/
+    case 13 : return "RTCWDT_CPU_RESET";      /**<13, RTC Watch dog Reset CPU*/
+    case 14 : return "EXT_CPU_RESET";         /**<14, for APP CPU, reseted by PRO CPU*/
+    case 15 : return "RTCWDT_BROWN_OUT_RESET";/**<15, Reset when the vdd voltage is not stable*/
+    case 16 : return "RTCWDT_RTC_RESET";      /**<16, RTC Watch dog reset digital core and rtc module*/
+    default : return "NO_MEAN";
+  }
+}
+
+
 void showInfo(){
   // Print text to info-textbox
-  gslc_ElemXTextboxReset(&m_gui,m_pElem_INFO_BOX);
-  //m_acTextboxBuf1 [200];
-  String text = "Uptime: " + String(seconds()) + "sec.\nFree DRAM: " + String(ESP.getFreeHeap()/1000) + " KB\nMeas count: " + String(sds_sensor.get_measure_cnt()) + "\nData.csv size: " + String(getCSVsize()) + " KB\n";
+  gslc_ElemXTextboxReset(&m_gui,m_pElem_infobox);
+  unsigned int sec = seconds();
+
+  // split long url
+  String url_p1 = String(my_losant_webhook_url).substring(0,39);
+  String url_p2 = String(my_losant_webhook_url).substring(39,78);
+  String url_p3 = String(my_losant_webhook_url).substring(78,116);
+  
+  // load reset reason
+  String reason_cpu0 = getResetReason(rtc_get_reset_reason(0));
+  String reason_cpu1 = getResetReason(rtc_get_reset_reason(1));
+  
+  String wifi_connected = (WiFi.isConnected()) ? "True" : "False"; 
+  
+  String text = "Date:     " + rtc.getDate() + " - " + rtc.getTime() + "\nUptime:   " + String(sec/60) + ":" + String(sec%60) + " - Meas cnt: " + String(sds_sensor.get_measure_cnt());
+  text += " - Interval: " + String((uint32_t)sds_sensor.get_interval_sec() * 60) + " min";
+  text += "\nCPU0 RST: " + reason_cpu0 + "\nCPU1 RST: " + reason_cpu1 + "\nMEM (KB): HEAP: " + String(ESP.getFreeHeap()/1000) + "/" + String(ESP.getHeapSize()/1000);
+  text += " | Lowest: " + String(esp_get_minimum_free_heap_size()/1000) + " | CSV: " + String(getCSVsize());
+  text += "\nCPU Freq: " + String(ESP.getCpuFreqMHz()) + " MHz - Model: " + String(ESP.getChipModel());
+  text += "\nIoT-URL:  " + url_p1;
+  text += "\n          " + url_p2 + "\n          " + url_p3;
+  text += "\nWiFi:     Connected? - " + wifi_connected + "\nSSID:     " + String(ssid) + " IP: " + String(ip_address); 
+  
   //snprintf(m_acTextboxBuf1,200,(char*)"Uptime: %u sec.\nFree DRAM: %i kb\ndata.csv: %i kb\nMeas count: %u\n", seconds(), ESP.getFreeHeap()/1000, getCSVsize(), sds_sensor.get_measure_cnt(false));
   //snprintf(m_acTextboxBuf1,600,text.c_str());
-  gslc_ElemXTextboxAdd(&m_gui,m_pElem_INFO_BOX,(char*)text.c_str());
+  gslc_ElemXTextboxAdd(&m_gui,m_pElem_infobox,(char*)text.c_str());
   delay(100);
+
 }
 
 
@@ -509,46 +660,87 @@ void show_value(bool pm10_val){
 }
 
 void updateCSV(unsigned long currentSec){
-  delay(100);
-  fs::File file = SPIFFS.open("/data.csv", "a");
-  file.printf("%u,", currentSec);
-  file.printf("%.2f,", sds_sensor.get_value(true,false));
-  file.printf("%.2f \n", sds_sensor.get_value(false, false));
-  file.close();
+    if(store_csv){
+      delay(1);
+      fs::File file = SPIFFS.open("/data.csv", "a");
+      file.printf("%s,", rtc.getTime().c_str());
+      file.printf("%.2f,", sds_sensor.get_last_value(true));
+      file.printf("%.2f \n", sds_sensor.get_last_value(false));
+      file.close();
+    }
 }
 
+// To get the size of the csv file in KB.
 size_t getCSVsize(){
-  // To get the size of the csv file in KB.
-  fs::File file = SPIFFS.open("/data.csv", "r");
-  size_t size = file.size();
-  file.close();
-  return (size / 1000);
+  if(store_csv){
+    fs::File file = SPIFFS.open("/data.csv", "r");
+    size_t size = file.size();
+    file.close();
+    return (size / 1000);
+  }
+  else{
+    return 1;
+  }
 }
 
 void printCSV(){
-  Serial.println("\n============================================");
-  Serial.println("========   Measurement data START   ========");
-  Serial.println("============================================\n\n");
+  if(store_csv){
 
-  fs::File file = SPIFFS.open("/data.csv", "r");
-  while(file.available()){
-    Serial.write(file.read());
+    Serial.println("\n============================================");
+    Serial.println("========   Measurement data START   ========");
+    Serial.println("============================================\n\n");
+
+    fs::File file = SPIFFS.open("/data.csv", "r");
+    while(file.available()){
+      Serial.write(file.read());
+    }
+    file.close();
+    Serial.println("\n\n============================================");
+    Serial.println("========    Measurement data END    ========");
+    Serial.println("============================================\n\n");
+
+    delay(200);
   }
-  file.close();
-  Serial.println("\n\n============================================");
-  Serial.println("========    Measurement data END    ========");
-  Serial.println("============================================\n\n");
-
-  delay(1000);
+  else{
+    Serial.println("CSV support deactivated!");
+  }
 }
 
 void resetCSV(){
-  SPIFFS.remove("/data.csv");
-  delay(100);
-  fs::File file = SPIFFS.open("/data.csv", "w");
-  file.printf("relative_time,pm10,pm25\n");
-  file.close();
-  delay(100);
+  if(store_csv){
+    SPIFFS.remove("/data.csv");
+    delay(100);
+    fs::File file = SPIFFS.open("/data.csv", "w");
+    file.printf("relative_time,pm10,pm25\n");
+    file.close();
+    delay(100);
+  }
+
+}
+
+void setCSV(bool enable){
+  // Creating a CSV indicator on SPIFFS, in order to recognize CSV setting at startup.
+    if(enable){
+      if(!SPIFFS.exists("/csv")){
+        fs::File file = SPIFFS.open("/csv", "w");
+        file.close();
+      }
+    }
+    else{
+      SPIFFS.remove("/csv");
+    }
+    store_csv = enable;
+}
+
+bool is_csv_enabled(){
+  if(SPIFFS.exists("/csv")){
+    Serial.println("Found CSV flag!");
+    return true;
+  }
+  else{
+    Serial.println("Not found CSV flag!");
+    return false;
+  }
 }
 
 void setBacklight(bool state){
@@ -560,9 +752,8 @@ void setBacklight(bool state){
     digitalWrite(tft_led_pin, LOW);
     gslc_PopupShow(&m_gui, E_PG_POPUP_DIMMER, true);	
   }
-  
-  
 }
+
 
 void handleDimmer(unsigned long _currentMillis){
   if(dimmerActivated && (_currentMillis - lastTouchEvent) > interval_dimmer){
@@ -571,43 +762,60 @@ void handleDimmer(unsigned long _currentMillis){
 }
 
 
+void uploadCloud(){
+  if(do_upload){
+    IoT_webhook.send_pm_update(sds_sensor.get_last_value(true), sds_sensor.get_last_value(false), rtc.getHour(true), rtc.getMinute());
+  }
+}
+
+
+
+
 
 void setup()
 { 
-    Serial.begin(2400);
-    delay(1000);
-    Serial.println(">>> Starting setup procedure");
-    delay(1000);
-    sds_sensor.setup(SDS_TX, SDS_RX, interval_heatup, interval);
-
+    Serial.begin(9600);
     delay(500);
-    // Wait for USB Serial 
-    //delay(1000);  // NOTE: Some devices require a delay after Serial.begin() before serial port can be used
+    Serial.println(">>> Starting setup procedure");
+    sds_sensor.setup(SDS_TX, SDS_RX, interval_heatup, interval);
+    Serial.println("IOT setup");
+    delay(100);
+    IoT_webhook.setup(my_losant_webhook_url);
+
+    delay(100);
+    Serial.println("Finished IOT setup");
+
+    
+    
     pinMode(tft_led_pin, OUTPUT);
     setBacklight(true);
-    //delay(1000);
+
+    Serial.println("Init guislice");
+    delay(100);
     gslc_InitDebug(&DebugOut);
-    delay(500);
     InitGUIslice_gen();
-    delay(2000);
-    
-    Serial.println("Setup data.csv");
-    
-    if(SPIFFS.exists("/data.csv")){
-      fs::File file = SPIFFS.open("/data.csv", "a");
-      file.printf("\n\n\n+++   RESTART - NEW DATASET   +++\n\n");
-      file.printf("relative_time,pm10,pm25\n");
-      file.close();
+
+    delay(500);
+    Serial.println("Checking CSV flag");
+    delay(50);
+    store_csv = is_csv_enabled(); // load indicator from spiffs
+    gslc_ElemXTogglebtnSetState(&m_gui, m_pElem_toggle_csv, store_csv); // set indicator
+    if(store_csv){ 
+      Serial.println("Setup data.csv");
+      
+      if(SPIFFS.exists("/data.csv")){
+        fs::File file = SPIFFS.open("/data.csv", "a");
+        file.printf("\n\n\n+++   RESTART - NEW DATASET   +++\n\n");
+        file.printf("relative_time,pm10,pm25\n");
+        file.close();
+      }
+      else{
+        fs::File file = SPIFFS.open("/data.csv", "w");
+        file.printf("relative_time,pm10,pm25\n");
+        file.close();
+      }
     }
-    else{
-      fs::File file = SPIFFS.open("/data.csv", "w");
-      file.printf("relative_time,pm10,pm25\n");
-      file.close();
-    }
-    
-    
- 
-    
+
     // Hide images and disable image-button glow (to avoid slow rendering)
     gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
     gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, false);
@@ -615,14 +823,24 @@ void setup()
     gslc_ElemSetVisible(&m_gui, m_pElem_wifi_gauge, false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_home,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_measure,false);
-    gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_back_PG_WIFI_PWD,false);
+    gslc_ElemSetGlowEn(&m_gui,m_pElem_back_WIFI_PWD,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_dashboard,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_WIFI_setup,false);
     gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_info,false);
-    gslc_ElemSetGlowEn(&m_gui,m_pElem_btn_back_pg_wifi,false);
-    delay(1000);
+    gslc_ElemSetGlowEn(&m_gui,m_pElem_back_pg_wifi,false);
+    gslc_ElemSetGlowEn(&m_gui,m_pElem_back_iot,false);
+    gslc_ElemSetGlowEn(&m_gui,m_pElem_back_info,false);
+    gslc_ElemSetGlowEn(&m_gui,m_pElem_back_sysset,false);
+    gslc_ElemSetGlowEn(&m_gui,m_pElem_back_time,false);
+    delay(100);
+    gslc_SetPageCur(&m_gui, E_PG_TIME);
+    gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
     Serial.println(">>> Setup finished <<<");
 }
+
+
+
+
 
 // -----------------------------------
 // Main event loop
@@ -738,6 +956,7 @@ void loop()
       show_value(true);
       show_value(false);
       updateCSV(seconds());
+      uploadCloud();
     }
     else{
       if(sds_sensor.is_measurement_running())
@@ -776,6 +995,7 @@ void loop()
     }
     
     handleDimmer(currentMillis);
+    delay(1);
     // ------------------------------------------------
     // Periodically call GUIslice update function
     // ------------------------------------------------
