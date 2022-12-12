@@ -187,6 +187,7 @@ bool gslc_DrvInit(gslc_tsGui* pGui)
   // Report any debug info if enabled
   #if defined(DBG_DRIVER)
   // TODO
+
   #endif
 
   // Initialize any library-specific members
@@ -200,7 +201,6 @@ bool gslc_DrvInit(gslc_tsGui* pGui)
     // These displays can accept partial redraw as they retain the last
     // image in the controller graphics RAM
     pGui->bRedrawPartialEn = true;
-
     m_disp.init();
 
     // Now that we have initialized the display, we can assign

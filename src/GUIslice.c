@@ -131,7 +131,6 @@ bool gslc_Init(gslc_tsGui* pGui,void* pvDriver,gslc_tsPage* asPage,uint8_t nMaxP
   #if !defined(INIT_MSG_DISABLE)
   GSLC_DEBUG_PRINT("GUIslice version [%s]:\n", gslc_GetVer(pGui));
   #endif
-
   pGui->eInitStatTouch = GSLC_INITSTAT_UNDEF;
 
   // Initialize state
@@ -161,6 +160,7 @@ bool gslc_Init(gslc_tsGui* pGui,void* pvDriver,gslc_tsPage* asPage,uint8_t nMaxP
 
   #endif
 
+
   // Default to remapping enabled
   pGui->bTouchRemapEn = true;
 
@@ -168,6 +168,7 @@ bool gslc_Init(gslc_tsGui* pGui,void* pvDriver,gslc_tsPage* asPage,uint8_t nMaxP
   pGui->nPageMax        = nMaxPage;
   pGui->nPageCnt        = 0;
   pGui->asPage          = asPage;
+
 
   for (nInd = 0; nInd < GSLC_STACK__MAX; nInd++) {
     pGui->apPageStack[nInd] = NULL;
@@ -177,6 +178,7 @@ bool gslc_Init(gslc_tsGui* pGui,void* pvDriver,gslc_tsPage* asPage,uint8_t nMaxP
   pGui->bRedrawNeeded      = false;
   pGui->bScreenNeedRedraw  = true;
   pGui->bScreenNeedFlip    = false;
+
 
   gslc_InvalidateRgnReset(pGui);
 
@@ -198,6 +200,7 @@ bool gslc_Init(gslc_tsGui* pGui,void* pvDriver,gslc_tsPage* asPage,uint8_t nMaxP
     // - The following is equivalent to GSLC_COL_MAGENTA
     pGui->sTransCol = (gslc_tsColor) { 0xFF, 0x00, 0xFF };
   #endif
+
 
   // Initialize collection of fonts with user-supplied pointer
   pGui->asFont      = asFont;
@@ -240,7 +243,9 @@ bool gslc_Init(gslc_tsGui* pGui,void* pvDriver,gslc_tsPage* asPage,uint8_t nMaxP
   pGui->colFocusEdit          = GSLC_COL_RED;
   #endif // GSLC_FEATURE_INPUT
 
+
   pGui->sImgRefBkgnd = gslc_ResetImage();
+
 
   // Save a link to the driver
   pGui->pvDriver = pvDriver;
@@ -255,8 +260,10 @@ bool gslc_Init(gslc_tsGui* pGui,void* pvDriver,gslc_tsPage* asPage,uint8_t nMaxP
   pGui->nFrameRateStart = time(NULL);
   #endif
 
+
   // Initialize the display and touch drivers
   if (bOk) {
+    
     bOk &= gslc_DrvInit(pGui);
     if (bOk) {
       #if !defined(INIT_MSG_DISABLE)

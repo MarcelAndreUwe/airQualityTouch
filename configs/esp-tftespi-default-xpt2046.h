@@ -173,14 +173,14 @@ extern "C" {
   //   - DEBUG_ERR 2 = Enable verbose error messaging (eg. bad parameters, etc.)
   // - For baseline Arduino UNO, recommended to disable this after one has
   //   confirmed basic operation of the library is successful.
-  #define DEBUG_ERR               0   // 1,2 to enable, 0 to disable
+  #define DEBUG_ERR               1   // 1,2 to enable, 0 to disable
 
   // Debug initialization message
   // - By default, GUIslice outputs a message in DEBUG_ERR mode
   //   to indicate the initialization status, even during success.
   // - To disable the messages during successful initialization,
   //   uncomment the following line.
-  #define INIT_MSG_DISABLE
+  //#define INIT_MSG_DISABLE
 
   // -----------------------------------------------------------------------------
   // SECTION 6: Optional Features
@@ -254,7 +254,7 @@ extern "C" {
   //#define DBG_TOUCH         // Enable debugging of touch-presses
   //#define DBG_FRAME_RATE    // Enable diagnostic frame rate reporting
   //#define DBG_DRAW_IMM      // Enable immediate rendering of drawing primitives
-  #define DBG_DRIVER        // Enable graphics driver debug reporting
+  //#define DBG_DRIVER        // Enable graphics driver debug reporting
 
 
   // =============================================================================
