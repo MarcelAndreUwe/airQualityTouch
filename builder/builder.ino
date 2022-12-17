@@ -28,6 +28,7 @@
 
 // Save some element references for direct access
 //<Save_References !Start!>
+gslc_tsElemRef* m_pElemCodeIn     = NULL;
 gslc_tsElemRef* m_pElemDay        = NULL;
 gslc_tsElemRef* m_pElemHour       = NULL;
 gslc_tsElemRef* m_pElemIn_PASSWORD= NULL;
@@ -39,6 +40,8 @@ gslc_tsElemRef* m_pElemYear       = NULL;
 gslc_tsElemRef* m_pElem_Measuring = NULL;
 gslc_tsElemRef* m_pElem_WIFI_LIST = NULL;
 gslc_tsElemRef* m_pElem_aqi_val   = NULL;
+gslc_tsElemRef* m_pElem_aqi_val73_74_75= NULL;
+gslc_tsElemRef* m_pElem_aqi_val73_76= NULL;
 gslc_tsElemRef* m_pElem_back_WIFI_PWD= NULL;
 gslc_tsElemRef* m_pElem_back_info = NULL;
 gslc_tsElemRef* m_pElem_back_iot  = NULL;
@@ -59,6 +62,7 @@ gslc_tsElemRef* m_pElem_img_wifi  = NULL;
 gslc_tsElemRef* m_pElem_infobox   = NULL;
 gslc_tsElemRef* m_pElem_label_measure_art= NULL;
 gslc_tsElemRef* m_pElem_label_measure_art38_39= NULL;
+gslc_tsElemRef* m_pElem_label_measure_art77= NULL;
 gslc_tsElemRef* m_pElem_label_pg_wifi_pwd= NULL;
 gslc_tsElemRef* m_pElem_meas_interval= NULL;
 gslc_tsElemRef* m_pElem_pm10_value= NULL;
@@ -70,7 +74,9 @@ gslc_tsElemRef* m_pElem_toggle_IoT= NULL;
 gslc_tsElemRef* m_pElem_toggle_csv= NULL;
 gslc_tsElemRef* m_pElem_toggle_dimmer= NULL;
 gslc_tsElemRef* m_pElem_toggle_measure= NULL;
+gslc_tsElemRef* m_pElem_unlock    = NULL;
 gslc_tsElemRef* m_pElem_wifi_gauge= NULL;
+gslc_tsElemRef* m_pElemenableLock = NULL;
 gslc_tsElemRef* m_pElemKeyPadNum  = NULL;
 gslc_tsElemRef* m_pElemKeyPadAlpha= NULL;
 //<Save_References !End!>
@@ -165,6 +171,8 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
           ;
         }
         break;
+      case E_ELEM_SHUTDOWN:
+        break;
       case E_ELEM_MEAS_INTERVAL:
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElem_meas_interval);
@@ -209,6 +217,10 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_BACK_TIME:
         gslc_PopupHide(&m_gui);
         break;
+      case E_ELEM_CODE_INPUT:
+        // Clicked on edit field, so show popup box and associate with this text field
+        gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemCodeIn);
+        break;
 //<Button Enums !End!>
       default:
         break;
@@ -216,8 +228,34 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
   }
   return true;
 }
-//<Checkbox Callback !Start!>
-//<Checkbox Callback !End!>
+// Checkbox / radio callbacks
+// - Creating a callback function is optional, but doing so enables you to
+//   detect changes in the state of the elements.
+bool CbCheckbox(void* pvGui, void* pvElemRef, int16_t nSelId, bool bState)
+{
+  gslc_tsGui*     pGui      = (gslc_tsGui*)(pvGui);
+  gslc_tsElemRef* pElemRef  = (gslc_tsElemRef*)(pvElemRef);
+  gslc_tsElem*    pElem     = gslc_GetElemFromRef(pGui,pElemRef);
+  if (pElemRef == NULL) {
+    return false;
+  }
+  
+  boolean bChecked = gslc_ElemXCheckboxGetState(pGui,pElemRef);
+
+  // Determine which element issued the callback
+  switch (pElem->nId) {
+//<Checkbox Enums !Start!>
+    case E_ELEM_ENABLE_LOCK:
+      break;
+
+    case E_ELEM_UNLOCK:
+      break;
+//<Checkbox Enums !End!>
+    default:
+      break;
+  } // switch
+  return true;
+}
 // KeyPad Input Ready callback
 bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
 {
@@ -264,6 +302,10 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
         break;
       case E_ELEM_NUM_MINUTE:
         gslc_ElemXKeyPadInputGet(pGui, m_pElemMinute, pvData);
+	    gslc_PopupHide(&m_gui);
+        break;
+      case E_ELEM_CODE_INPUT:
+        gslc_ElemXKeyPadInputGet(pGui, m_pElemCodeIn, pvData);
 	    gslc_PopupHide(&m_gui);
         break;
 //<Keypad Enums !End!>
