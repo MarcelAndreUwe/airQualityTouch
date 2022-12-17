@@ -4,32 +4,59 @@
 
 SDS_Sensor_Helper::SDS_Sensor_Helper(void){}
 
-void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval){
-    this->pm10_sum = 0.0;
-    this->pm25_sum = 0.0;
-    this->pm10_last_val = 0.0;
-    this->pm25_last_val = 0.0;
-    this->pm10_sum_24h = 0.0;
-    this->pm25_sum_24h = 0.0;
-    this->pm10_last_24h_average = 0.0;
-    this->pm25_last_24h_average = 0.0;
-    this->runtime_meas_cnt = 0;    
-    this->meas_cnt_24h = 0;
-    #ifdef ESP32
-        // ESP32 must use HardwareSerial
-        this->sds_sensor.begin(&Serial2);
-        delay(1000);
-        this->sds_sensor.sleep();
-    #else
+/**
+ * @brief Setup SDS011 sensor class
+ * @note  On ESP32 the tx/rx pins are unused! SDS011 will use the Serial2 interface (RXD2 & TXD2)
+ * @param tx_pin 
+ * @param rx_pin 
+ * @param wakeup_time   :   Wating time bevore measurement to clean/heatup sensor.
+ * @param meas_interval :   Interval for measurement
+ */
+#ifndef ESP32
+    void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval){
+        this->pm10_sum = 0.0;
+        this->pm25_sum = 0.0;
+        this->pm10_last_val = 0.0;
+        this->pm25_last_val = 0.0;
+        this->pm10_sum_24h = 0.0;
+        this->pm25_sum_24h = 0.0;
+        this->pm10_last_24h_average = 0.0;
+        this->pm25_last_24h_average = 0.0;
+        this->runtime_meas_cnt = 0;    
+        this->meas_cnt_24h = 0;
         this->sds_sensor.begin(rx_pin, tx_pin); 
         delay(100);
         this->sds_sensor.sleep();
-    #endif
-    this->measurement_is_running = false;
-    this->wakeup_time = wakeup_time;
-    this->measurement_starting_time = 0;
-    this->meas_interval = meas_interval;
-}
+        this->measurement_is_running = false;
+        this->wakeup_time = wakeup_time;
+        this->measurement_starting_time = 0;
+        this->meas_interval = meas_interval;
+    }
+#endif
+
+#ifdef ESP32
+    void SDS_Sensor_Helper::setup(unsigned long wakeup_time, int meas_interval){
+        this->pm10_sum = 0.0;
+        this->pm25_sum = 0.0;
+        this->pm10_last_val = 0.0;
+        this->pm25_last_val = 0.0;
+        this->pm10_sum_24h = 0.0;
+        this->pm25_sum_24h = 0.0;
+        this->pm10_last_24h_average = 0.0;
+        this->pm25_last_24h_average = 0.0;
+        this->runtime_meas_cnt = 0;    
+        this->meas_cnt_24h = 0;
+        
+        // ESP32 must use HardwareSerial
+        this->sds_sensor.begin(&Serial2);
+        delay(250);
+        this->sds_sensor.sleep();
+        this->measurement_is_running = false;
+        this->wakeup_time = wakeup_time;
+        this->measurement_starting_time = 0;
+        this->meas_interval = meas_interval;
+    }
+#endif
 
 bool SDS_Sensor_Helper::update(unsigned long current_millis){
     bool ret = false;
@@ -177,7 +204,10 @@ void SDS_Sensor_Helper::set_measure_interval(int interval_ms){
 }
 
 int SDS_Sensor_Helper::get_interval_sec(){
-    return (this->meas_interval * 1000);
+    return (this->meas_interval / 1000);
 }
 
+ String SDS_Sensor_Helper::get_aqi(){
+    
+ }
 

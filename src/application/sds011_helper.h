@@ -11,14 +11,20 @@ class SDS_Sensor_Helper
   public: 
     SDS_Sensor_Helper(void);    //default constructor
 
-    /*
-    Setup SDS-Sensor.
-    @param tx_pin TX Pin
-    @param rx_pin RX Pin
-    @param wakeup_time Time in ms how long the sensor should take for wakeup
-    @param meas_interval Time in ms for the interval of measurements
+    /**
+    * @brief Setup SDS011 sensor class
+    * @note  On ESP32 the tx/rx pins are unused! SDS011 will use the Serial2 interface (RXD2 & TXD2) on ESP32!
+    * @param tx_pin 
+    * @param rx_pin 
+    * @param wakeup_time   :   Wating time bevore measurement to clean/heatup sensor.
+    * @param meas_interval :   Interval for measurement
     */
-    void setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval);  
+    #ifndef ESP32
+      void setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval);  
+    #endif
+    #ifdef ESP32
+      void setup(unsigned long wakeup_time, int meas_interval);
+    #endif
 
     /*
     To start a measurement.
@@ -62,6 +68,8 @@ class SDS_Sensor_Helper
     bool is_measurement_running();
     
     int get_interval_sec();
+
+    String get_aqi();
 
 
 
