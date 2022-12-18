@@ -21,7 +21,6 @@
 // Include any extended elements
 //<Includes !Start!>
 // Include extended elements
-#include "elem/XCheckbox.h"
 #include "elem/XKeyPad_Alpha.h"
 #include "elem/XKeyPad_Num.h"
 #include "elem/XListbox.h"
@@ -71,41 +70,47 @@
 //<Enum !Start!>
 enum {E_PG_MAIN,E_PG_WIFI,E_PG_WIFI_PSWD,E_PG_OVERVIEW,E_PG_INFO
       ,E_PG_SYS_SET,E_PG_IOT_SET,E_PG_POPUP_DIMMER,E_PG_TIME,E_PG_LOCK
-      ,E_PG_UPLOAD_POPUP,E_POP_KEYPAD_NUM,E_POP_KEYPAD_ALPHA};
+      ,E_PG_UPLOAD_POPUP,E_PG_Continuous,E_POP_KEYPAD_NUM
+      ,E_POP_KEYPAD_ALPHA};
 enum {E_DRAW_LINE1,E_DRAW_LINE11,E_DRAW_LINE12,E_DRAW_LINE13
-      ,E_DRAW_LINE3,E_DRAW_LINE4,E_DRAW_LINE5,E_DRAW_LINE6,E_DRAW_LINE8
-      ,E_ELEM_AQI,E_ELEM_BACK_INFO,E_ELEM_BACK_IOT,E_ELEM_BACK_PG_WIFI
-      ,E_ELEM_BACK_SYSSET,E_ELEM_BACK_TIME,E_ELEM_BACK_WIFI_PWD
-      ,E_ELEM_BOX2,E_ELEM_BTN_CONNECT,E_ELEM_BTN_INFO
-      ,E_ELEM_BTN_IOT_SET,E_ELEM_BTN_SAVE_TIME,E_ELEM_BTN_SCAN_WIFI
-      ,E_ELEM_BTN_SETTIME,E_ELEM_BTN_SYS_SET,E_ELEM_BTN_WIFI_CONNECT
-      ,E_ELEM_BTN_WIFI_SETUP,E_ELEM_BTN_dashboard,E_ELEM_CODE_INPUT
-      ,E_ELEM_CON_MSG,E_ELEM_DEL_DATA,E_ELEM_DIMMER_TIMER
-      ,E_ELEM_DIM_OFF,E_ELEM_DIM_ON,E_ELEM_ENABLE_LOCK,E_ELEM_HOME_BTN
-      ,E_ELEM_HUM_VALUE,E_ELEM_IMAGE6,E_ELEM_IMAGE8,E_ELEM_IMG_NOWIFI
-      ,E_ELEM_IMG_WIFI,E_ELEM_INFOBOX,E_ELEM_LABEL_SSID_PG_WIFI
-      ,E_ELEM_LABEL_SSID_PG_WIFI_PWD,E_ELEM_MEASURE_BTN
-      ,E_ELEM_MEAS_INTERVAL,E_ELEM_NUM_DAY,E_ELEM_NUM_HOUR
-      ,E_ELEM_NUM_MINUTE,E_ELEM_NUM_MONTH,E_ELEM_NUM_YEAR
-      ,E_ELEM_PM10_VALUE,E_ELEM_PM25_VALUE,E_ELEM_PRINT_DATA
-      ,E_ELEM_PROGRESS_MEASURE,E_ELEM_PSWD_INPUT,E_ELEM_RINGGAUGE_PM10
-      ,E_ELEM_RINGGAUGE_PM25,E_ELEM_SHUTDOWN,E_ELEM_TEMP_VALUE
-      ,E_ELEM_TEXT33,E_ELEM_TEXT34,E_ELEM_TEXT36,E_ELEM_TEXT37
-      ,E_ELEM_TEXT39,E_ELEM_TEXT41,E_ELEM_TEXT42,E_ELEM_TEXT43
-      ,E_ELEM_TEXT44,E_ELEM_TEXT45,E_ELEM_TEXT55,E_ELEM_TEXT56
-      ,E_ELEM_TEXT57,E_ELEM_TEXT58,E_ELEM_TEXT59,E_ELEM_TEXT60
-      ,E_ELEM_TEXT61,E_ELEM_TEXT62,E_ELEM_TEXT63,E_ELEM_TEXT64
-      ,E_ELEM_TEXT65,E_ELEM_TEXT69,E_ELEM_TEXT70,E_ELEM_TEXT71
-      ,E_ELEM_TEXT75,E_ELEM_TEXT76,E_ELEM_TEXT77,E_ELEM_TEXTPM25
-      ,E_ELEM_TEXT_AQI,E_ELEM_TEXT_HUM_UNIT,E_ELEM_TEXT_MEASURE_ART
+      ,E_DRAW_LINE14,E_DRAW_LINE15,E_DRAW_LINE3,E_DRAW_LINE4
+      ,E_DRAW_LINE5,E_DRAW_LINE6,E_DRAW_LINE8,E_ELEM_AQI
+      ,E_ELEM_BACK_CONTIN,E_ELEM_BACK_INFO,E_ELEM_BACK_IOT
+      ,E_ELEM_BACK_PG_WIFI,E_ELEM_BACK_SYSSET,E_ELEM_BACK_TIME
+      ,E_ELEM_BACK_WIFI_PWD,E_ELEM_BOX2,E_ELEM_BTN_CONNECT
+      ,E_ELEM_BTN_CONTINUOUS,E_ELEM_BTN_INFO,E_ELEM_BTN_IOT_SET
+      ,E_ELEM_BTN_SAVE_TIME,E_ELEM_BTN_SCAN_WIFI,E_ELEM_BTN_SETTIME
+      ,E_ELEM_BTN_SYS_SET,E_ELEM_BTN_WIFI_CONNECT,E_ELEM_BTN_WIFI_SETUP
+      ,E_ELEM_BTN_dashboard,E_ELEM_CODE_INPUT,E_ELEM_CON_MSG
+      ,E_ELEM_DEL_DATA,E_ELEM_DIMMER_TIMER,E_ELEM_DIM_OFF,E_ELEM_DIM_ON
+      ,E_ELEM_HOME_BTN,E_ELEM_HUM_VALUE,E_ELEM_IMAGE6,E_ELEM_IMAGE8
+      ,E_ELEM_IMG_NOWIFI,E_ELEM_IMG_WIFI,E_ELEM_INFOBOX
+      ,E_ELEM_LABEL_SSID_PG_WIFI,E_ELEM_LABEL_SSID_PG_WIFI_PWD
+      ,E_ELEM_MEASURE_BTN,E_ELEM_MEAS_INTERVAL,E_ELEM_NUM_DAY
+      ,E_ELEM_NUM_HOUR,E_ELEM_NUM_MINUTE,E_ELEM_NUM_MONTH
+      ,E_ELEM_NUM_YEAR,E_ELEM_PM10_VALUE,E_ELEM_PM10_continuous
+      ,E_ELEM_PM25_VALUE,E_ELEM_PM25_continuous,E_ELEM_POPUP_L1
+      ,E_ELEM_POPUP_L2,E_ELEM_PRINT_DATA,E_ELEM_PROGRESS_MEASURE
+      ,E_ELEM_PSWD_INPUT,E_ELEM_RINGGAUGE_PM10,E_ELEM_RINGGAUGE_PM25
+      ,E_ELEM_SAVE_SET,E_ELEM_SHUTDOWN,E_ELEM_TEMP_VALUE,E_ELEM_TEXT33
+      ,E_ELEM_TEXT34,E_ELEM_TEXT36,E_ELEM_TEXT37,E_ELEM_TEXT39
+      ,E_ELEM_TEXT41,E_ELEM_TEXT42,E_ELEM_TEXT43,E_ELEM_TEXT44
+      ,E_ELEM_TEXT45,E_ELEM_TEXT55,E_ELEM_TEXT56,E_ELEM_TEXT57
+      ,E_ELEM_TEXT58,E_ELEM_TEXT59,E_ELEM_TEXT60,E_ELEM_TEXT61
+      ,E_ELEM_TEXT62,E_ELEM_TEXT63,E_ELEM_TEXT64,E_ELEM_TEXT65
+      ,E_ELEM_TEXT69,E_ELEM_TEXT70,E_ELEM_TEXT77,E_ELEM_TEXT78
+      ,E_ELEM_TEXT80,E_ELEM_TEXT81,E_ELEM_TEXT82,E_ELEM_TEXT84
+      ,E_ELEM_TEXT88,E_ELEM_TEXT91,E_ELEM_TEXT92,E_ELEM_TEXT93
+      ,E_ELEM_TEXT94,E_ELEM_TEXTPM25,E_ELEM_TEXT_AQI
+      ,E_ELEM_TEXT_HUM_UNIT,E_ELEM_TEXT_MEASURE_ART
       ,E_ELEM_TEXT_MEASURING,E_ELEM_TEXT_PASSWORD,E_ELEM_TEXT_PM10
       ,E_ELEM_TEXT_PM10_UNIT,E_ELEM_TEXT_PM25_UNIT,E_ELEM_TEXT_SSID
       ,E_ELEM_TEXT_SSID_PG_WIFI,E_ELEM_TEXT_TEMP_UNIT
       ,E_ELEM_TITEL_PG_WIFI,E_ELEM_TITLE_INFO,E_ELEM_TITLE_PG_OVERVIEW
       ,E_ELEM_TIT_WIFI_PWD,E_ELEM_TOGGLE_CSV,E_ELEM_TOGGLE_DIMMER
-      ,E_ELEM_TOGGLE_IOT,E_ELEM_TOGGLE_MEASURE,E_ELEM_UNLOCK
-      ,E_ELEM_WIFI_GAUGE,E_ELEM_WIFI_LIST,E_ELEM_KEYPAD_NUM
-      ,E_ELEM_KEYPAD_ALPHA};
+      ,E_ELEM_TOGGLE_IOT,E_ELEM_TOGGLE_LOCK,E_ELEM_TOGGLE_MEASURE
+      ,E_ELEM_UNLOCK,E_ELEM_WIFI_GAUGE,E_ELEM_WIFI_LIST
+      ,E_ELEM_KEYPAD_NUM,E_ELEM_KEYPAD_ALPHA};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
 enum {E_BUILTIN10X16,E_BUILTIN5X8,E_FREESANS12,E_FREESANS9
       ,E_FREESANSBOLD12,E_FREESANSBOLD9,MAX_FONT};
@@ -119,7 +124,7 @@ enum {E_BUILTIN10X16,E_BUILTIN5X8,E_FREESANS12,E_FREESANS9
 // Define the maximum number of elements and pages
 // ------------------------------------------------
 //<ElementDefines !Start!>
-#define MAX_PAGE                13
+#define MAX_PAGE                14
 
 #define MAX_ELEM_PG_MAIN 3 // # Elems total on page
 #define MAX_ELEM_PG_MAIN_RAM MAX_ELEM_PG_MAIN // # Elems in RAM
@@ -136,7 +141,7 @@ enum {E_BUILTIN10X16,E_BUILTIN5X8,E_FREESANS12,E_FREESANS9
 #define MAX_ELEM_PG_INFO 7 // # Elems total on page
 #define MAX_ELEM_PG_INFO_RAM MAX_ELEM_PG_INFO // # Elems in RAM
 
-#define MAX_ELEM_PG_SYS_SET 16 // # Elems total on page
+#define MAX_ELEM_PG_SYS_SET 18 // # Elems total on page
 #define MAX_ELEM_PG_SYS_SET_RAM MAX_ELEM_PG_SYS_SET // # Elems in RAM
 
 #define MAX_ELEM_PG_IOT_SET 12 // # Elems total on page
@@ -148,11 +153,14 @@ enum {E_BUILTIN10X16,E_BUILTIN5X8,E_FREESANS12,E_FREESANS9
 #define MAX_ELEM_PG_TIME 17 // # Elems total on page
 #define MAX_ELEM_PG_TIME_RAM MAX_ELEM_PG_TIME // # Elems in RAM
 
-#define MAX_ELEM_PG_LOCK 5 // # Elems total on page
+#define MAX_ELEM_PG_LOCK 4 // # Elems total on page
 #define MAX_ELEM_PG_LOCK_RAM MAX_ELEM_PG_LOCK // # Elems in RAM
 
 #define MAX_ELEM_PG_UPLOAD_POPUP 3 // # Elems total on page
 #define MAX_ELEM_PG_UPLOAD_POPUP_RAM MAX_ELEM_PG_UPLOAD_POPUP // # Elems in RAM
+
+#define MAX_ELEM_PG_Continuous 15 // # Elems total on page
+#define MAX_ELEM_PG_Continuous_RAM MAX_ELEM_PG_Continuous // # Elems in RAM
 //<ElementDefines !End!>
 
 // ------------------------------------------------
@@ -186,6 +194,8 @@ gslc_tsElem                     m_asPage9Elem[MAX_ELEM_PG_LOCK_RAM];
 gslc_tsElemRef                  m_asPage9ElemRef[MAX_ELEM_PG_LOCK];
 gslc_tsElem                     m_asPopup4Elem[MAX_ELEM_PG_UPLOAD_POPUP_RAM];
 gslc_tsElemRef                  m_asPopup4ElemRef[MAX_ELEM_PG_UPLOAD_POPUP];
+gslc_tsElem                     m_asPage10Elem[MAX_ELEM_PG_Continuous_RAM];
+gslc_tsElemRef                  m_asPage10ElemRef[MAX_ELEM_PG_Continuous];
 gslc_tsElem                     m_asKeypadNumElem[1];
 gslc_tsElemRef                  m_asKeypadNumElemRef[1];
 gslc_tsElem                     m_asKeypadAlphaElem[1];
@@ -200,13 +210,12 @@ gslc_tsXTogglebtn               m_asXToggle2;
 gslc_tsXRingGauge               m_sXRingGauge1;
 gslc_tsXRingGauge               m_sXRingGauge2;
 gslc_tsXProgress                m_sXBarGauge1;
-gslc_tsXCheckbox                m_asXRadio1;
+gslc_tsXTogglebtn               m_asXToggle7;
 gslc_tsXTextbox                 m_sTextbox1;
 char                            m_acTextboxBuf1[780]; // NRows=13 NCols=60
 gslc_tsXTogglebtn               m_asXToggle3;
 gslc_tsXTogglebtn               m_asXToggle5;
 gslc_tsXTogglebtn               m_asXToggle6;
-gslc_tsXCheckbox                m_asXCheck2;
 
 #define MAX_STR                 100
 
@@ -230,9 +239,8 @@ extern gslc_tsElemRef* m_pElemYear;
 extern gslc_tsElemRef* m_pElem_Measuring;
 extern gslc_tsElemRef* m_pElem_WIFI_LIST;
 extern gslc_tsElemRef* m_pElem_aqi_val;
-extern gslc_tsElemRef* m_pElem_aqi_val73_74_75;
-extern gslc_tsElemRef* m_pElem_aqi_val73_76;
 extern gslc_tsElemRef* m_pElem_back_WIFI_PWD;
+extern gslc_tsElemRef* m_pElem_back_contin;
 extern gslc_tsElemRef* m_pElem_back_info;
 extern gslc_tsElemRef* m_pElem_back_iot;
 extern gslc_tsElemRef* m_pElem_back_pg_wifi;
@@ -255,7 +263,11 @@ extern gslc_tsElemRef* m_pElem_label_measure_art38_39;
 extern gslc_tsElemRef* m_pElem_label_measure_art77;
 extern gslc_tsElemRef* m_pElem_label_pg_wifi_pwd;
 extern gslc_tsElemRef* m_pElem_meas_interval;
+extern gslc_tsElemRef* m_pElem_pm10_cont_max;
+extern gslc_tsElemRef* m_pElem_pm10_continuous;
 extern gslc_tsElemRef* m_pElem_pm10_value;
+extern gslc_tsElemRef* m_pElem_pm25_cont_max;
+extern gslc_tsElemRef* m_pElem_pm25_continuous;
 extern gslc_tsElemRef* m_pElem_pm25_value;
 extern gslc_tsElemRef* m_pElem_progress_measure;
 extern gslc_tsElemRef* m_pElem_selected_ssid;
@@ -263,12 +275,14 @@ extern gslc_tsElemRef* m_pElem_temp_value;
 extern gslc_tsElemRef* m_pElem_toggle_IoT;
 extern gslc_tsElemRef* m_pElem_toggle_csv;
 extern gslc_tsElemRef* m_pElem_toggle_dimmer;
+extern gslc_tsElemRef* m_pElem_toggle_lock;
 extern gslc_tsElemRef* m_pElem_toggle_measure;
 extern gslc_tsElemRef* m_pElem_unlock;
 extern gslc_tsElemRef* m_pElem_wifi_gauge;
-extern gslc_tsElemRef* m_pElemenableLock;
 extern gslc_tsElemRef* m_pListSlider1;
 extern gslc_tsElemRef* m_pTextSlider1;
+extern gslc_tsElemRef* popup_line1;
+extern gslc_tsElemRef* popup_line2;
 extern gslc_tsElemRef* m_pElemKeyPadNum;
 extern gslc_tsElemRef* m_pElemKeyPadAlpha;
 //<Extern_References !End!>
@@ -321,6 +335,7 @@ void InitGUIslice_gen()
   gslc_PageAdd(&m_gui,E_PG_TIME,m_asPage8Elem,MAX_ELEM_PG_TIME_RAM,m_asPage8ElemRef,MAX_ELEM_PG_TIME);
   gslc_PageAdd(&m_gui,E_PG_LOCK,m_asPage9Elem,MAX_ELEM_PG_LOCK_RAM,m_asPage9ElemRef,MAX_ELEM_PG_LOCK);
   gslc_PageAdd(&m_gui,E_PG_UPLOAD_POPUP,m_asPopup4Elem,MAX_ELEM_PG_UPLOAD_POPUP_RAM,m_asPopup4ElemRef,MAX_ELEM_PG_UPLOAD_POPUP);
+  gslc_PageAdd(&m_gui,E_PG_Continuous,m_asPage10Elem,MAX_ELEM_PG_Continuous_RAM,m_asPage10ElemRef,MAX_ELEM_PG_Continuous);
   gslc_PageAdd(&m_gui,E_POP_KEYPAD_NUM,m_asKeypadNumElem,1,m_asKeypadNumElemRef,1);  // KeyPad
   gslc_PageAdd(&m_gui,E_POP_KEYPAD_ALPHA,m_asKeypadAlphaElem,1,m_asKeypadAlphaElemRef,1);  // KeyPad
 
@@ -371,7 +386,7 @@ void InitGUIslice_gen()
   gslc_ElemSetFrameEn(&m_gui,pElemRef,false);
   
   // Create E_ELEM_TITEL_PG_WIFI text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITEL_PG_WIFI,E_PG_WIFI,(gslc_tsRect){0,0,320,20},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITEL_PG_WIFI,E_PG_WIFI,(gslc_tsRect){0,0,320,30},
     (char*)"Network settings",0,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
@@ -449,7 +464,7 @@ void InitGUIslice_gen()
   m_pElemIn_PASSWORD = pElemRef;
   
   // Create E_ELEM_TIT_WIFI_PWD text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TIT_WIFI_PWD,E_PG_WIFI_PSWD,(gslc_tsRect){0,0,320,20},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TIT_WIFI_PWD,E_PG_WIFI_PSWD,(gslc_tsRect){0,0,320,30},
     (char*)"Network settings",0,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
@@ -503,7 +518,7 @@ void InitGUIslice_gen()
   
   
   // Create E_ELEM_TITLE_PG_OVERVIEW text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITLE_PG_OVERVIEW,E_PG_OVERVIEW,(gslc_tsRect){0,0,320,20},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TITLE_PG_OVERVIEW,E_PG_OVERVIEW,(gslc_tsRect){0,0,320,30},
     (char*)"Air quality",0,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
@@ -550,8 +565,8 @@ void InitGUIslice_gen()
   m_pElem_pm25_value = pElemRef;
   
   // Create E_ELEM_TEXT_MEASURE_ART text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_MEASURE_ART,E_PG_OVERVIEW,(gslc_tsRect){240,120,67,18},
-    (char*)"24h average",0,E_BUILTIN5X8);
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_MEASURE_ART,E_PG_OVERVIEW,(gslc_tsRect){240,120,43,18},
+    (char*)"Average",0,E_BUILTIN5X8);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
@@ -562,9 +577,9 @@ void InitGUIslice_gen()
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT2,GSLC_COL_GRAY_LT2);
   
   // Create E_ELEM_AQI runtime modifiable text
-  static char m_sDisplayText22[11] = "Good";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_AQI,E_PG_OVERVIEW,(gslc_tsRect){70,95,149,20},
-    (char*)m_sDisplayText22,11,E_FREESANSBOLD12);
+  static char m_sDisplayText22[15] = "Good";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_AQI,E_PG_OVERVIEW,(gslc_tsRect){60,95,209,20},
+    (char*)m_sDisplayText22,15,E_FREESANSBOLD12);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GREEN_DK1);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
@@ -572,7 +587,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEMP_VALUE runtime modifiable text
   static char m_sDisplayText24[6] = "23.5";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEMP_VALUE,E_PG_OVERVIEW,(gslc_tsRect){70,134,61,18},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEMP_VALUE,E_PG_OVERVIEW,(gslc_tsRect){60,134,61,18},
     (char*)m_sDisplayText24,6,E_BUILTIN10X16);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -581,7 +596,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_HUM_VALUE runtime modifiable text
   static char m_sDisplayText25[6] = "48.2";
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_HUM_VALUE,E_PG_OVERVIEW,(gslc_tsRect){70,170,61,18},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_HUM_VALUE,E_PG_OVERVIEW,(gslc_tsRect){60,170,61,18},
     (char*)m_sDisplayText25,6,E_BUILTIN10X16);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -589,13 +604,13 @@ void InitGUIslice_gen()
   m_pElem_hum_val = pElemRef;
   
   // Create E_ELEM_TEXT_TEMP_UNIT text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_TEMP_UNIT,E_PG_OVERVIEW,(gslc_tsRect){130,134,13,18},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_TEMP_UNIT,E_PG_OVERVIEW,(gslc_tsRect){120,134,13,18},
     (char*)"C",0,E_FREESANSBOLD9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_ELEM_TEXT_HUM_UNIT text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_HUM_UNIT,E_PG_OVERVIEW,(gslc_tsRect){130,170,16,18},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT_HUM_UNIT,E_PG_OVERVIEW,(gslc_tsRect){120,170,16,18},
     (char*)"%",0,E_FREESANSBOLD9);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -652,7 +667,6 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_RED);
-  gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
   m_pElem_Measuring = pElemRef;
   
   // Create E_ELEM_TEXT_AQI text label
@@ -663,13 +677,13 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
  
   // Create E_ELEM_IMG_NOWIFI using Image 
-  pElemRef = gslc_ElemCreateImg(&m_gui,E_ELEM_IMG_NOWIFI,E_PG_OVERVIEW,(gslc_tsRect){143,40,32,32},
+  pElemRef = gslc_ElemCreateImg(&m_gui,E_ELEM_IMG_NOWIFI,E_PG_OVERVIEW,(gslc_tsRect){144,40,32,32},
     gslc_GetImageFromFile(IMG_NOWIFI,GSLC_IMGREF_FMT_BMP24));
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   m_pElem_img_nowifi = pElemRef;
  
   // Create E_ELEM_IMG_WIFI using Image 
-  pElemRef = gslc_ElemCreateImg(&m_gui,E_ELEM_IMG_WIFI,E_PG_OVERVIEW,(gslc_tsRect){143,40,32,32},
+  pElemRef = gslc_ElemCreateImg(&m_gui,E_ELEM_IMG_WIFI,E_PG_OVERVIEW,(gslc_tsRect){144,40,32,32},
     gslc_GetImageFromFile(IMG_WIFI,GSLC_IMGREF_FMT_BMP24));
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   m_pElem_img_wifi = pElemRef;
@@ -704,20 +718,19 @@ void InitGUIslice_gen()
   pElemRef = gslc_ElemCreateLine(&m_gui,E_DRAW_LINE3,E_PG_OVERVIEW,58,160,158,160);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT2,GSLC_COL_GRAY_LT2);
   
-  // Create radio button E_ELEM_ENABLE_LOCK
-  pElemRef = gslc_ElemXCheckboxCreate(&m_gui,E_ELEM_ENABLE_LOCK,E_PG_OVERVIEW,&m_asXRadio1,
-    (gslc_tsRect){200,145,20,20},true,GSLCX_CHECKBOX_STYLE_BOX,GSLC_COL_GREEN_DK4,false);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT2,GSLC_COL_BLACK);
-  gslc_ElemXCheckboxSetStateFunc(&m_gui, pElemRef, &CbCheckbox);
-  m_pElemenableLock = pElemRef;
-  
   // Create E_ELEM_TEXT77 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT77,E_PG_OVERVIEW,(gslc_tsRect){240,145,67,18},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT77,E_PG_OVERVIEW,(gslc_tsRect){240,143,67,20},
     (char*)"Lock screen",0,E_BUILTIN5X8);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
   m_pElem_label_measure_art77 = pElemRef;
+  
+  // Create toggle button E_ELEM_TOGGLE_LOCK
+  pElemRef = gslc_ElemXTogglebtnCreate(&m_gui,E_ELEM_TOGGLE_LOCK,E_PG_OVERVIEW,&m_asXToggle7,
+    (gslc_tsRect){190,143,40,18},GSLC_COL_GRAY,GSLC_COL_GREEN_DK1,GSLC_COL_GRAY_LT2,
+    true,false,&CbBtnCommon);
+  m_pElem_toggle_lock = pElemRef;
 
   // -----------------------------------
   // PAGE: E_PG_INFO
@@ -886,6 +899,20 @@ void InitGUIslice_gen()
     (gslc_tsRect){240,210,70,25},(char*)"Shutdown",0,E_BUILTIN5X8,&CbBtnCommon);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_RED,GSLC_COL_BROWN,GSLC_COL_GRAY_DK1);
   gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  
+  // create E_ELEM_SAVE_SET button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_SAVE_SET,E_PG_SYS_SET,
+    (gslc_tsRect){130,210,90,25},(char*)"Save settings",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_DK3,GSLC_COL_BLUE_LT4,GSLC_COL_GRAY_DK1);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,false);
+  
+  // create E_ELEM_BTN_CONTINUOUS button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_CONTINUOUS,E_PG_SYS_SET,
+    (gslc_tsRect){10,158,150,18},(char*)"Continuous measure mode",0,E_BUILTIN5X8,&CbBtnCommon);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_DK3,GSLC_COL_BLUE_LT4,GSLC_COL_GRAY_DK1);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,false);
 
   // -----------------------------------
   // PAGE: E_PG_IOT_SET
@@ -1137,7 +1164,7 @@ void InitGUIslice_gen()
   
   // Create E_ELEM_TEXT69 text label
   pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT69,E_PG_LOCK,(gslc_tsRect){0,0,320,30},
-    (char*)"Lockscreen",0,E_FREESANSBOLD12);
+    (char*)"Screen locked!",0,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -1155,23 +1182,19 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetTxtMargin(&m_gui,pElemRef,5);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_MAGENTA);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_YELLOW,GSLC_COL_GRAY_LT2);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT3,GSLC_COL_GRAY_LT2);
   gslc_ElemSetFrameEn(&m_gui,pElemRef,true);
   gslc_ElemSetClickEn(&m_gui, pElemRef, true);
   gslc_ElemSetTouchFunc(&m_gui, pElemRef, &CbBtnCommon);
   m_pElemCodeIn = pElemRef;
   
-  // Create E_ELEM_TEXT71 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT71,E_PG_LOCK,(gslc_tsRect){96,150,128,15},
-    (char*)"Check to unlock",0,E_FREESANS9);
-  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
-  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
-   
-  // create checkbox E_ELEM_UNLOCK
-  pElemRef = gslc_ElemXCheckboxCreate(&m_gui,E_ELEM_UNLOCK,E_PG_LOCK,&m_asXCheck2,
-    (gslc_tsRect){148,180,24,24},false,GSLCX_CHECKBOX_STYLE_BOX,GSLC_COL_MAGENTA,true);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_YELLOW,GSLC_COL_BLACK);
-  gslc_ElemXCheckboxSetStateFunc(&m_gui, pElemRef, &CbCheckbox);
+  // create E_ELEM_UNLOCK button with text label
+  pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_UNLOCK,E_PG_LOCK,
+    (gslc_tsRect){112,170,95,32},(char*)"Unlock",0,E_FREESANS9,&CbBtnCommon);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_DK3,GSLC_COL_GREEN_DK2,GSLC_COL_GRAY_DK1);
+  gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
+  gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
+  gslc_ElemSetFrameEn(&m_gui,pElemRef,false);
   m_pElem_unlock = pElemRef;
 
   // -----------------------------------
@@ -1181,24 +1204,137 @@ void InitGUIslice_gen()
   // Create E_ELEM_BOX2 box
   pElemRef = gslc_ElemCreateBox(&m_gui,E_ELEM_BOX2,E_PG_UPLOAD_POPUP,(gslc_tsRect){10,50,300,80});
   gslc_ElemSetRoundEn(&m_gui, pElemRef, true);
-  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_RED_DK2,GSLC_COL_GRAY_LT3,GSLC_COL_GRAY_LT3);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT3,GSLC_COL_GRAY_LT3,GSLC_COL_GRAY_LT3);
   
-  // Create E_ELEM_TEXT75 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT75,E_PG_UPLOAD_POPUP,(gslc_tsRect){86,95,148,20},
-    (char*)"Please wait...",0,E_FREESANSBOLD12);
+  // Create E_ELEM_POPUP_L2 runtime modifiable text
+  static char m_sDisplayText75[26] = "Please wait...";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_POPUP_L2,E_PG_UPLOAD_POPUP,(gslc_tsRect){43,95,234,20},
+    (char*)m_sDisplayText75,26,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GREEN_DK1);
-  m_pElem_aqi_val73_74_75 = pElemRef;
+  popup_line2 = pElemRef;
   
-  // Create E_ELEM_TEXT76 text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT76,E_PG_UPLOAD_POPUP,(gslc_tsRect){17,60,285,30},
-    (char*)"Uploading data to cloud!",0,E_FREESANSBOLD12);
+  // Create E_ELEM_POPUP_L1 runtime modifiable text
+  static char m_sDisplayText76[26] = "Uploading / saving data!";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_POPUP_L1,E_PG_UPLOAD_POPUP,(gslc_tsRect){8,60,303,20},
+    (char*)m_sDisplayText76,26,E_FREESANSBOLD12);
   gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
   gslc_ElemSetFillEn(&m_gui,pElemRef,false);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GREEN_DK1);
-  gslc_ElemSetTxtEnc(&m_gui,pElemRef,GSLC_TXT_ENC_UTF8);
-  m_pElem_aqi_val73_76 = pElemRef;
+  popup_line1 = pElemRef;
+
+  // -----------------------------------
+  // PAGE: E_PG_Continuous
+  
+  
+  // Create E_ELEM_TEXT78 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT78,E_PG_Continuous,(gslc_tsRect){0,0,320,30},
+    (char*)"Continuous measuring",0,E_FREESANSBOLD12);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  
+  // Create E_ELEM_PM10_continuous runtime modifiable text
+  static char m_sDisplayText79[5] = "";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_PM10_continuous,E_PG_Continuous,(gslc_tsRect){35,80,51,20},
+    (char*)m_sDisplayText79,5,E_FREESANS12);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  m_pElem_pm10_continuous = pElemRef;
+  
+  // Create E_ELEM_TEXT80 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT80,E_PG_Continuous,(gslc_tsRect){95,80,31,20},
+    (char*)"ug/m3",0,E_BUILTIN5X8);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_BOT_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  
+  // Create E_ELEM_TEXT81 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT81,E_PG_Continuous,(gslc_tsRect){0,50,160,16},
+    (char*)"PM 10",0,E_BUILTIN10X16);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  
+  // Create E_ELEM_TEXT82 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT82,E_PG_Continuous,(gslc_tsRect){160,50,160,18},
+    (char*)"PM 25",0,E_BUILTIN10X16);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  
+  // Create E_ELEM_PM25_continuous runtime modifiable text
+  static char m_sDisplayText83[5] = "";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_PM25_continuous,E_PG_Continuous,(gslc_tsRect){200,80,51,20},
+    (char*)m_sDisplayText83,5,E_FREESANS12);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  m_pElem_pm25_continuous = pElemRef;
+  
+  // Create E_ELEM_TEXT84 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT84,E_PG_Continuous,(gslc_tsRect){260,80,31,20},
+    (char*)"ug/m3",0,E_BUILTIN5X8);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_BOT_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+
+  // Create E_DRAW_LINE14 line 
+  pElemRef = gslc_ElemCreateLine(&m_gui,E_DRAW_LINE14,E_PG_Continuous,160,50,160,100);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT2,GSLC_COL_GRAY_LT2);
+
+  // Create E_DRAW_LINE15 line 
+  pElemRef = gslc_ElemCreateLine(&m_gui,E_DRAW_LINE15,E_PG_Continuous,20,110,300,110);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_BLACK,GSLC_COL_GRAY_LT2,GSLC_COL_GRAY_LT2);
+  
+  // Create E_ELEM_BACK_CONTIN button with image label
+  pElemRef = gslc_ElemCreateBtnImg(&m_gui,E_ELEM_BACK_CONTIN,E_PG_Continuous,(gslc_tsRect){2,205,32,32},
+          gslc_GetImageFromFile(IMG_EXIT,GSLC_IMGREF_FMT_BMP24),
+          gslc_GetImageFromFile(IMG_EXIT,GSLC_IMGREF_FMT_BMP24),
+          &CbBtnCommon);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  m_pElem_back_contin = pElemRef;
+  
+  // Create E_ELEM_TEXT88 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT88,E_PG_Continuous,(gslc_tsRect){0,120,320,18},
+    (char*)"Max",0,E_BUILTIN10X16);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  
+  // Create E_ELEM_TEXT91 runtime modifiable text
+  static char m_sDisplayText91[5] = "";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT91,E_PG_Continuous,(gslc_tsRect){35,150,51,20},
+    (char*)m_sDisplayText91,5,E_FREESANS12);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  m_pElem_pm10_cont_max = pElemRef;
+  
+  // Create E_ELEM_TEXT92 runtime modifiable text
+  static char m_sDisplayText92[5] = "";
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT92,E_PG_Continuous,(gslc_tsRect){200,150,51,20},
+    (char*)m_sDisplayText92,5,E_FREESANS12);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  m_pElem_pm25_cont_max = pElemRef;
+  
+  // Create E_ELEM_TEXT93 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT93,E_PG_Continuous,(gslc_tsRect){260,150,31,20},
+    (char*)"ug/m3",0,E_BUILTIN5X8);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_BOT_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+  
+  // Create E_ELEM_TEXT94 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT94,E_PG_Continuous,(gslc_tsRect){95,150,31,20},
+    (char*)"ug/m3",0,E_BUILTIN5X8);
+  gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_BOT_MID);
+  gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
 
   // -----------------------------------
   // PAGE: E_POP_KEYPAD_NUM

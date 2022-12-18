@@ -28,21 +28,23 @@
 
 // Save some element references for direct access
 //<Save_References !Start!>
+gslc_tsElemRef* graph_selected    = NULL;
 gslc_tsElemRef* m_pElemCodeIn     = NULL;
 gslc_tsElemRef* m_pElemDay        = NULL;
+gslc_tsElemRef* m_pElemGraph      = NULL;
 gslc_tsElemRef* m_pElemHour       = NULL;
 gslc_tsElemRef* m_pElemIn_PASSWORD= NULL;
 gslc_tsElemRef* m_pElemMinute     = NULL;
 gslc_tsElemRef* m_pElemMonth      = NULL;
+gslc_tsElemRef* m_pElemToggleGraph= NULL;
 gslc_tsElemRef* m_pElemXRingGaugePM10= NULL;
 gslc_tsElemRef* m_pElemXRingGaugePM25= NULL;
 gslc_tsElemRef* m_pElemYear       = NULL;
 gslc_tsElemRef* m_pElem_Measuring = NULL;
 gslc_tsElemRef* m_pElem_WIFI_LIST = NULL;
 gslc_tsElemRef* m_pElem_aqi_val   = NULL;
-gslc_tsElemRef* m_pElem_aqi_val73_74_75= NULL;
-gslc_tsElemRef* m_pElem_aqi_val73_76= NULL;
 gslc_tsElemRef* m_pElem_back_WIFI_PWD= NULL;
+gslc_tsElemRef* m_pElem_back_contin= NULL;
 gslc_tsElemRef* m_pElem_back_info = NULL;
 gslc_tsElemRef* m_pElem_back_iot  = NULL;
 gslc_tsElemRef* m_pElem_back_pg_wifi= NULL;
@@ -65,7 +67,9 @@ gslc_tsElemRef* m_pElem_label_measure_art38_39= NULL;
 gslc_tsElemRef* m_pElem_label_measure_art77= NULL;
 gslc_tsElemRef* m_pElem_label_pg_wifi_pwd= NULL;
 gslc_tsElemRef* m_pElem_meas_interval= NULL;
+gslc_tsElemRef* m_pElem_pm10_continuous= NULL;
 gslc_tsElemRef* m_pElem_pm10_value= NULL;
+gslc_tsElemRef* m_pElem_pm25_continuous= NULL;
 gslc_tsElemRef* m_pElem_pm25_value= NULL;
 gslc_tsElemRef* m_pElem_progress_measure= NULL;
 gslc_tsElemRef* m_pElem_selected_ssid= NULL;
@@ -73,10 +77,12 @@ gslc_tsElemRef* m_pElem_temp_value= NULL;
 gslc_tsElemRef* m_pElem_toggle_IoT= NULL;
 gslc_tsElemRef* m_pElem_toggle_csv= NULL;
 gslc_tsElemRef* m_pElem_toggle_dimmer= NULL;
+gslc_tsElemRef* m_pElem_toggle_lock= NULL;
 gslc_tsElemRef* m_pElem_toggle_measure= NULL;
 gslc_tsElemRef* m_pElem_unlock    = NULL;
 gslc_tsElemRef* m_pElem_wifi_gauge= NULL;
-gslc_tsElemRef* m_pElemenableLock = NULL;
+gslc_tsElemRef* popup_line1       = NULL;
+gslc_tsElemRef* popup_line2       = NULL;
 gslc_tsElemRef* m_pElemKeyPadNum  = NULL;
 gslc_tsElemRef* m_pElemKeyPadAlpha= NULL;
 //<Save_References !End!>
@@ -134,6 +140,12 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_ELEM_HOME_BTN:
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         break;
+      case E_ELEM_TOGGLE_LOCK:
+        // TODO Add code for Toggle button ON/OFF state
+        if (gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_lock)) {
+          ;
+        }
+        break;
       case E_ELEM_BTN_SYS_SET:
         gslc_SetPageCur(&m_gui, E_PG_SYS_SET);
         break;
@@ -172,6 +184,10 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         }
         break;
       case E_ELEM_SHUTDOWN:
+        break;
+      case E_ELEM_SAVE_SET:
+        break;
+      case E_ELEM_BTN_CONTINUOUS:
         break;
       case E_ELEM_MEAS_INTERVAL:
         // Clicked on edit field, so show popup box and associate with this text field
@@ -221,6 +237,16 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemCodeIn);
         break;
+      case E_ELEM_UNLOCK:
+        break;
+      case E_ELEM_BACK_CONTIN:
+        break;
+      case E_ELEM_TOGGLE_GRAPH:
+        // TODO Add code for Toggle button ON/OFF state
+        if (gslc_ElemXTogglebtnGetState(&m_gui, m_pElemToggleGraph)) {
+          ;
+        }
+        break;
 //<Button Enums !End!>
       default:
         break;
@@ -245,11 +271,7 @@ bool CbCheckbox(void* pvGui, void* pvElemRef, int16_t nSelId, bool bState)
   // Determine which element issued the callback
   switch (pElem->nId) {
 //<Checkbox Enums !Start!>
-    case E_ELEM_ENABLE_LOCK:
-      break;
 
-    case E_ELEM_UNLOCK:
-      break;
 //<Checkbox Enums !End!>
     default:
       break;

@@ -2,67 +2,79 @@
 #include <stdint.h>
 #include <Arduino.h>
 
-SDS_Sensor_Helper::SDS_Sensor_Helper(void){}
+SDS_Sensor_Helper::SDS_Sensor_Helper(void) {}
 
 /**
  * @brief Setup SDS011 sensor class
  * @note  On ESP32 the tx/rx pins are unused! SDS011 will use the Serial2 interface (RXD2 & TXD2)
- * @param tx_pin 
- * @param rx_pin 
+ * @param tx_pin
+ * @param rx_pin
  * @param wakeup_time   :   Wating time bevore measurement to clean/heatup sensor.
  * @param meas_interval :   Interval for measurement
  */
 #ifndef ESP32
-    void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval){
-        this->pm10_sum = 0.0;
-        this->pm25_sum = 0.0;
-        this->pm10_last_val = 0.0;
-        this->pm25_last_val = 0.0;
-        this->pm10_sum_24h = 0.0;
-        this->pm25_sum_24h = 0.0;
-        this->pm10_last_24h_average = 0.0;
-        this->pm25_last_24h_average = 0.0;
-        this->runtime_meas_cnt = 0;    
-        this->meas_cnt_24h = 0;
-        this->sds_sensor.begin(rx_pin, tx_pin); 
-        delay(100);
-        this->sds_sensor.sleep();
-        this->measurement_is_running = false;
-        this->wakeup_time = wakeup_time;
-        this->measurement_starting_time = 0;
-        this->meas_interval = meas_interval;
-    }
+void SDS_Sensor_Helper::setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval)
+{
+    this->pm10_sum = 0.0;
+    this->pm25_sum = 0.0;
+    this->pm10_last_val = 0.0;
+    this->pm25_last_val = 0.0;
+    this->pm10_sum_1h = 0.0;
+    this->pm25_sum_1h = 0.0;
+    this->pm10_last_average = 0.0;
+    this->pm25_last_average = 0.0;
+    this->runtime_meas_cnt = 0;
+    this->meas_cnt_1h = 0;
+    this->sds_sensor.begin(rx_pin, tx_pin);
+    delay(100);
+    this->sds_sensor.sleep();
+    this->measurement_is_running = false;
+    this->wakeup_time = wakeup_time;
+    this->measurement_starting_time = 0;
+    this->meas_interval = meas_interval;
+    this->last_hour_millis = 0;
+}
+
 #endif
 
 #ifdef ESP32
-    void SDS_Sensor_Helper::setup(unsigned long wakeup_time, int meas_interval){
-        this->pm10_sum = 0.0;
-        this->pm25_sum = 0.0;
-        this->pm10_last_val = 0.0;
-        this->pm25_last_val = 0.0;
-        this->pm10_sum_24h = 0.0;
-        this->pm25_sum_24h = 0.0;
-        this->pm10_last_24h_average = 0.0;
-        this->pm25_last_24h_average = 0.0;
-        this->runtime_meas_cnt = 0;    
-        this->meas_cnt_24h = 0;
-        
-        // ESP32 must use HardwareSerial
-        this->sds_sensor.begin(&Serial2);
-        delay(250);
-        this->sds_sensor.sleep();
-        this->measurement_is_running = false;
-        this->wakeup_time = wakeup_time;
-        this->measurement_starting_time = 0;
-        this->meas_interval = meas_interval;
-    }
+void SDS_Sensor_Helper::setup(unsigned long wakeup_time, int meas_interval)
+{
+    this->pm10_sum = 0.0;
+    this->pm25_sum = 0.0;
+    this->pm10_last_val = 0.0;
+    this->pm25_last_val = 0.0;
+    this->pm10_sum_1h = 0.0;
+    this->pm25_sum_1h = 0.0;
+    this->pm10_last_average = 0.0;
+    this->pm25_last_average = 0.0;
+    this->runtime_meas_cnt = 0;
+    this->meas_cnt_1h = 0;
+    this->last_hour_millis = 0;
+
+    // ESP32 must use HardwareSerial
+    this->sds_sensor.begin(&Serial2);
+    delay(100);
+    this->sds_sensor.sleep();
+    this->measurement_is_running = false;
+    this->wakeup_time = wakeup_time;
+    this->measurement_starting_time = 0;
+    this->meas_interval = meas_interval;
+}
+
 #endif
 
-bool SDS_Sensor_Helper::update(unsigned long current_millis){
+/// @brief  Check if new measurement-values available.
+///         If measurement-interval is over, the SDS sensor will be wake up.
+///         If wake-up interval is over, the measurement starts.
+/// @param current_millis
+/// @return True if new values are available, else false.
+bool SDS_Sensor_Helper::update(unsigned long current_millis)
+{
     bool ret = false;
-    if(!this->measurement_is_running && (current_millis - this->last_meas_request) > this->meas_interval)
+    if (!this->measurement_is_running && (current_millis - this->last_meas_request) > this->meas_interval)
     {
-        //Serial.println("SDS Wakeup");
+        Serial.println("SDS Wakeup");
         this->sds_sensor.wakeup();
         this->measurement_is_running = true;
         this->measurement_starting_time = current_millis;
@@ -71,7 +83,7 @@ bool SDS_Sensor_Helper::update(unsigned long current_millis){
     else if (this->measurement_is_running)
     {
         // check if wakup-intervall time has expired
-        if((current_millis - this->measurement_starting_time) > this->wakeup_time)
+        if ((current_millis - this->measurement_starting_time) > this->wakeup_time)
         {
             // Wakup-time has expired, do measurement
             this->do_measurement();
@@ -82,132 +94,149 @@ bool SDS_Sensor_Helper::update(unsigned long current_millis){
     return ret;
 }
 
+void SDS_Sensor_Helper::setContinuous()
+{
+    this->sds_sensor.wakeup();
+}
 
-bool SDS_Sensor_Helper::is_measurement_running(){
+void SDS_Sensor_Helper::readContinuous(float *pm10, float *pm25)
+{
+    this->sds_sensor.read(pm25, pm10);
+}
+
+bool SDS_Sensor_Helper::is_measurement_running()
+{
     return this->measurement_is_running;
 }
 
-
-
-
-bool SDS_Sensor_Helper::request_measure(unsigned long current_millis){
-    //Serial.println("SDS Wakeup");
-    delay(2);
+void SDS_Sensor_Helper::request_measure(unsigned long current_millis)
+{
+    Serial.println("Manual SDS Wakeup");
     this->sds_sensor.wakeup();
     this->measurement_is_running = true;
     this->measurement_starting_time = current_millis;
-    return true;
+    this->last_meas_request = current_millis;
 }
 
-
-float SDS_Sensor_Helper::get_last_value(bool pm10){
-    if(pm10){ return this->pm10_last_val;}
-    else{ return this->pm25_last_val; }
-}
-
-
-float SDS_Sensor_Helper::get_value(bool pm10, bool _24h){
-    if(_24h)
+float SDS_Sensor_Helper::getPM10value(bool _average)
+{
+    if (_average)
     {
-        // get the last average for the last 24 hours
-        if(pm10)
-        { 
-            return this->pm10_last_24h_average;
-        }
-        else
-        { 
-            return this->pm25_last_24h_average; 
-        }
+        return this->pm10_last_average;
     }
     else
     {
-        // get the current value
-        if(pm10)
-        { 
-            return this->pm10_last_val ;
-        }
-        else
-        { 
-            return this->pm25_last_val ;
-        }
+        return this->pm10_last_val; // current value
     }
-    
-}   
+}
 
-
-
-int SDS_Sensor_Helper::get_measure_cnt(bool _24h){
-    if(_24h){
-        return this->meas_cnt_24h;
+float SDS_Sensor_Helper::getPM25value(bool _average)
+{
+    if (_average)
+    {
+        return this->pm25_last_average;
     }
-    else{
+    else
+    {
+        return this->pm25_last_val; // current value
+    }
+}
+
+int SDS_Sensor_Helper::get_measure_cnt(bool for_1_hour)
+{
+    if (for_1_hour)
+    {
+        return this->meas_cnt_1h;
+    }
+    else
+    {
         return this->runtime_meas_cnt;
     }
 }
 
-bool SDS_Sensor_Helper::is_measure_finished(unsigned long current_millis){
-    if(this->measurement_is_running)
+bool SDS_Sensor_Helper::is_measure_finished(unsigned long current_millis)
+{
+    if (this->measurement_is_running)
     {
         // check if wakup-intervall time is up
-        if((current_millis - this->measurement_starting_time) > this->wakeup_time)
+        if ((current_millis - this->measurement_starting_time) > this->wakeup_time)
         {
             // Wakup-time is over, do measurement
             this->do_measurement();
             this->measurement_is_running = false;
         }
     }
-
     return this->measurement_is_running;
 }
 
-void SDS_Sensor_Helper::do_measurement(){
-    // do measurement and set SDS to sleep
-    //Serial.println("SDS Measurement");
+/// @brief  Helper function for the measuring.
+///         After measurement the SDS sensor will be set to sleep.
+void SDS_Sensor_Helper::do_measurement()
+{
+    Serial.println("Doing SDS Measurement");
     int error = this->sds_sensor.read(&this->pm25_last_val, &this->pm10_last_val);
-    if (!error) 
+    if (!error)
     {
-        this->pm10_sum += this->pm10_last_val;
-        this->pm25_sum += this->pm25_last_val;
         this->runtime_meas_cnt++;
-
-        // calculate 24h average
-        unsigned long meas_time_sum = this->meas_cnt_24h * (this->meas_interval + this->wakeup_time);
-        int is_24h = (int) ((meas_time_sum / this->hour_ms) % 24); // calculate if timespan for measurements is greater than 24 hours
-        if(is_24h > 0)
+        if (millis() - this->last_hour_millis >= 3600000)
         {
-            this->pm10_last_24h_average = this->pm10_sum_24h / this->meas_cnt_24h;
-            this->pm25_last_24h_average = this->pm25_sum_24h / this->meas_cnt_24h;
-            // reset 24h measurement values 
-            this->meas_cnt_24h = 0; 
-            this->pm10_sum_24h = 0.0;
-            this->pm25_sum_24h = 0.0;
-
+            // 1 hour has passed
+            this->last_hour_millis = millis();
+            this->pm10_last_average = this->pm10_sum_1h / this->meas_cnt_1h;
+            this->pm25_last_average = this->pm25_sum_1h / this->meas_cnt_1h;
+            // reset 1h measurement values
+            this->meas_cnt_1h = 0;
+            this->pm10_sum_1h = 0.0;
+            this->pm25_sum_1h = 0.0;
         }
         else
         {
-            this->meas_cnt_24h++; 
-            this->pm10_sum_24h += this->pm10_last_val;
-            this->pm25_sum_24h += this->pm25_last_val;
+            this->meas_cnt_1h += 1;
+            this->pm10_sum_1h += this->pm10_last_val;
+            this->pm25_sum_1h += this->pm25_last_val;
         }
 
+        /*
+        // calculate 1h average
+        unsigned long meas_time_sum = this->meas_cnt_1h * (this->meas_interval + this->wakeup_time);
+        int is_24h = (int)((meas_time_sum / this->hour_ms) % 24); // calculate if timespan for measurements is greater than 24 hours
+        if (is_24h > 0)
+        {
+            this->pm10_last_average = this->pm10_sum_1h / this->meas_cnt_1h;
+            this->pm25_last_average = this->pm25_sum_1h / this->meas_cnt_1h;
+            // reset 24h measurement values
+            this->meas_cnt_1h = 0;
+            this->pm10_sum_1h = 0.0;
+            this->pm25_sum_1h = 0.0;
+        }
+        else
+        {
+            this->meas_cnt_1h++;
+            this->pm10_sum_1h += this->pm10_last_val;
+            this->pm25_sum_1h += this->pm25_last_val;
+        }
+
+        */
     }
     else
     {
         Serial.println("SDS error");
     }
     this->sds_sensor.sleep();
+    Serial.println("SDS set to sleep");
 }
 
+void SDS_Sensor_Helper::quit_continuous()
+{
+    this->sds_sensor.sleep();
+}
 
-void SDS_Sensor_Helper::set_measure_interval(int interval_ms){
+void SDS_Sensor_Helper::set_measure_interval(int interval_ms)
+{
     this->meas_interval = interval_ms;
 }
 
-int SDS_Sensor_Helper::get_interval_sec(){
+int SDS_Sensor_Helper::get_interval_sec()
+{
     return (this->meas_interval / 1000);
 }
-
- String SDS_Sensor_Helper::get_aqi(){
-    
- }
-

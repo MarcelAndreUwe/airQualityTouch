@@ -107,7 +107,7 @@ extern "C" {
 
   // Set Default rotation of the display
   // - Values 0,1,2,3. Rotation is clockwise
-  #define GSLC_ROTATE     1
+  #define GSLC_ROTATE     3
 
   // -----------------------------------------------------------------------------
   // SECTION 4: Touch Handling
@@ -173,7 +173,7 @@ extern "C" {
   //   - DEBUG_ERR 2 = Enable verbose error messaging (eg. bad parameters, etc.)
   // - For baseline Arduino UNO, recommended to disable this after one has
   //   confirmed basic operation of the library is successful.
-  #define DEBUG_ERR               1   // 1,2 to enable, 0 to disable
+  #define DEBUG_ERR               0   // 1,2 to enable, 0 to disable
 
   // Debug initialization message
   // - By default, GUIslice outputs a message in DEBUG_ERR mode
@@ -228,7 +228,7 @@ extern "C" {
 
   // Define buffer size for loading images from SD
   // - A larger buffer will be faster but at the cost of RAM
-  #define GSLC_SD_BUFFPIXEL   50
+  #define GSLC_SD_BUFFPIXEL   25
 
   // Enable support for graphics clipping (DrvSetClipRect)
   // - Note that this will impact performance of drawing graphics primitives

@@ -20,82 +20,82 @@ class SDS_Sensor_Helper
     * @param meas_interval :   Interval for measurement
     */
     #ifndef ESP32
-      void setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval);  
+      void setup(int tx_pin, int rx_pin, unsigned long wakeup_time, int meas_interval);
     #endif
     #ifdef ESP32
       void setup(unsigned long wakeup_time, int meas_interval);
     #endif
 
-    /*
-    To start a measurement.
-    The SDS-sensor is awakened. The function is_measure_finished() starts the measurement when the wakeup-intervall has expired
-    */
-    bool request_measure(unsigned long current_millis);
+ 
+    /// @brief To manually start a measurement. 
+    /// @note  The function is_measure_finished() starts the measurement when the configured wakeup-intervall has expired
+    /// @param current_millis 
+    void request_measure(unsigned long current_millis);
 
-    /*
-    Returns the last measured value
-    */
-    float get_last_value(bool pm10=false);
 
-    /*
-    Returns the average value for the device-runtime or the last 24h
-    */
-    float get_value(bool pm10=false, bool _24h=true); 
+    /// @brief  Get the measured PM10 pollution value
+    /// @param _average Set true to get the average over the last hour, false to get the most recent value
+    /// @return Pollution in µg/m³
+    float getPM10value(bool _average);
 
-    /*
-    Returns the count of measurements for the last 24h or device runtime
-    */
-    int get_measure_cnt(bool _24h = true);
 
-    /*
-    To update the SDS-class and getting the current state of the running measurement
-    Necessary to handle the measurement depending on the wakup-time. 
-    */
+    /// @brief  Get the measured PM25 pollution value
+    /// @param _average Set true to get the average over the last hour, false to get the most recent value
+    /// @return Pollution in µg/m³
+    float getPM25value(bool _average);
+
+
+    /// @brief Get the count of measurements for the last hour or device runtime
+    /// @return Measurement count
+    int get_measure_cnt(bool for_1_hour = true);
+
+    /// @brief To update the SDS-class and getting the current state of the running measurement
+    /// Necessary to handle the measurement depending on the wakup-time. 
     bool is_measure_finished(unsigned long current_millis);
 
-    /*
-    Set the interval for measurements. 
-    Only for internal calculation of the 24 hour average value.
-    */
+    /// @brief Set the interval for measurements. 
+    /// @note  Only for internal calculation of the 1 hour average value.
     void set_measure_interval(int interval_ms);
 
-    /*
-    Check if new measurement is necessary
-    @return True if new values are available
-    */
+    /// @brief  Check if new measurement-values available.
+    ///         If measurement-interval is over, the SDS sensor will be wake up.
+    ///         If wake-up interval is over, the measurement starts.
+    /// @note   Needed to periodically update / check if measurement interval is over and measurement is necessary!
+    /// @param current_millis 
+    /// @return True if new values are available, else false.
     bool update(unsigned long current_millis);
 
+    /// @brief True if measurement or wakeup is running
     bool is_measurement_running();
     
+    /// @brief  Get the configured measurement interval
+    /// @return Measurement interval
     int get_interval_sec();
 
-    String get_aqi();
-
-
-
-
+    void setContinuous();
+    void readContinuous(float* pm10, float*pm25);
+    void quit_continuous();
 
     private:   
     SDS011 sds_sensor;
-    /* 
-    Only called internal after wakeup-intervall has expired. 
-    This function makes the measurement and stores the values. 
-    */
+    /// @brief  Helper function for the measuring. 
+    ///         After measurement the SDS sensor will be set to sleep.
     void do_measurement();
     bool measurement_is_running;
     float pm10_sum;                     // sum of measured values
     float pm25_sum;                     // sum of measured values
     float pm10_last_val;                // last measured value
     float pm25_last_val;                // last measured value
-    float pm10_sum_24h;                 // sum of measured values for the last 24h
-    float pm25_sum_24h;                 // sum of measured values for the last 24h
-    float pm10_last_24h_average;        // last average value for the last 24h
-    float pm25_last_24h_average;        // last average value for the last 24h
+    float pm10_sum_1h;                 // sum of measured values for the last 1h
+    float pm25_sum_1h;                 // sum of measured values for the last 1h
+    float pm10_last_average;        // last average value for the last 1h
+    float pm25_last_average;        // last average value for the last 1h
     uint32_t runtime_meas_cnt;          // counts the measurements since device is started
-    unsigned long meas_cnt_24h;              // counts the measurements for the last 24 hours
-    unsigned long wakeup_time;          // (millis) interval how long the SDS-sensor should need for wake up 
+    unsigned long meas_cnt_1h;          // counts the measurements for the last hour
+    unsigned long wakeup_time;          // (millis) interval how long the SDS-sensor should take for wake up 
     unsigned long measurement_starting_time; // (millis) when measurement was requested, to calculate when wake-up interval has expired
     unsigned long last_meas_request;    // (millis) last time when a measurement was requested 
+    unsigned long last_hour_millis;     // (millis) last time when a hour has passed
     int meas_interval;                 // Interval for measurements, only for internal calculations
     unsigned long hour_ms = 1000*60*60; // For internal calculations only
 };

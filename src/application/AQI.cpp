@@ -1,4 +1,5 @@
-#include<bits/stdc++.h>
+#include "AQI.h"
+#include <bits/stdc++.h>
 #include <Arduino.h>
 #include <string.h>
 using namespace std;
@@ -49,7 +50,7 @@ float calc_aqipm25(float pm25_value)
 
 /// @brief Calculate the AQI value of particulate matter PM10
 /// @param pm10_value 
-/// @return 
+/// @return AQI value
 float calc_aqipm10(float pm10_value)                         
 {
    float c;
@@ -86,28 +87,31 @@ float calc_aqipm10(float pm10_value)
 
 /// @brief Mapping the AQI-Value to the AQI-Table
 /// @param aqi_value 
-/// @return String Good, Moderate, Unhealthy, Very unhealthy, Risky, Hazardous!, UNSAFE!
-String prescription(float e)                 
+/// @return int: 0=Very good (below 25), 1= Good, 2=Moderate, 3=Unhealthy, 4=Very unhealthy, 5=Risky, 6=Hazardous!, 7=UNSAFE!
+int mapAqiToIndex(float aqi_value)                 
 {
-	if(e>=0&&e<=50){
-		return "Good";
+	if(aqi_value>=0&&aqi_value<=25){
+		return 0;
 	}
-	if(e>=51&&e<=100){
-		return "Moderate";
+	if(aqi_value>=25&&aqi_value<=50){
+		return 1;
 	}
-	if(e>=101&&e<=150){
-		return "Unhealthy";
+	if(aqi_value>=51&&aqi_value<=100){
+		return 2;
 	}
-	if(e>151&&e<=200){
-		return "Very unhealthy";
+	if(aqi_value>=101&&aqi_value<=150){
+		return 3;
 	}
-	if(e>=201&&e<=300){
-		return "Risky";
+	if(aqi_value>151&&aqi_value<=200){
+		return 4;
 	}
-	if(e>=301&&e<=500){
-		return "Hazardous!";
+	if(aqi_value>=201&&aqi_value<=300){
+		return 5;
 	}
-    if(e>500){
-        return "UNSAFE!";
+	if(aqi_value>=301&&aqi_value<=500){
+		return 6;
+	}
+    if(aqi_value>500){
+        return 7;
     }
 }

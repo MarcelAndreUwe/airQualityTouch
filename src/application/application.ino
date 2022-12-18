@@ -97,12 +97,14 @@
 #include <string>
 #include "sds011_helper.h"
 #include "iot_helper.h"
+#include "AQI.h"
 #include <SPIFFS.h>
 #include <ESP32Time.h>
 #include <iostream>
 #include <rom/rtc.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+
 
 
 #define IMG_BKGND_1               "/back.bmp"
@@ -127,9 +129,8 @@ gslc_tsElemRef* m_pElemYear       = NULL;
 gslc_tsElemRef* m_pElem_Measuring = NULL;
 gslc_tsElemRef* m_pElem_WIFI_LIST = NULL;
 gslc_tsElemRef* m_pElem_aqi_val   = NULL;
-gslc_tsElemRef* m_pElem_aqi_val73_74_75= NULL;
-gslc_tsElemRef* m_pElem_aqi_val73_76= NULL;
 gslc_tsElemRef* m_pElem_back_WIFI_PWD= NULL;
+gslc_tsElemRef* m_pElem_back_contin= NULL;
 gslc_tsElemRef* m_pElem_back_info = NULL;
 gslc_tsElemRef* m_pElem_back_iot  = NULL;
 gslc_tsElemRef* m_pElem_back_pg_wifi= NULL;
@@ -152,7 +153,11 @@ gslc_tsElemRef* m_pElem_label_measure_art38_39= NULL;
 gslc_tsElemRef* m_pElem_label_measure_art77= NULL;
 gslc_tsElemRef* m_pElem_label_pg_wifi_pwd= NULL;
 gslc_tsElemRef* m_pElem_meas_interval= NULL;
+gslc_tsElemRef* m_pElem_pm10_cont_max= NULL;
+gslc_tsElemRef* m_pElem_pm10_continuous= NULL;
 gslc_tsElemRef* m_pElem_pm10_value= NULL;
+gslc_tsElemRef* m_pElem_pm25_cont_max= NULL;
+gslc_tsElemRef* m_pElem_pm25_continuous= NULL;
 gslc_tsElemRef* m_pElem_pm25_value= NULL;
 gslc_tsElemRef* m_pElem_progress_measure= NULL;
 gslc_tsElemRef* m_pElem_selected_ssid= NULL;
@@ -160,10 +165,12 @@ gslc_tsElemRef* m_pElem_temp_value= NULL;
 gslc_tsElemRef* m_pElem_toggle_IoT= NULL;
 gslc_tsElemRef* m_pElem_toggle_csv= NULL;
 gslc_tsElemRef* m_pElem_toggle_dimmer= NULL;
+gslc_tsElemRef* m_pElem_toggle_lock= NULL;
 gslc_tsElemRef* m_pElem_toggle_measure= NULL;
 gslc_tsElemRef* m_pElem_unlock    = NULL;
 gslc_tsElemRef* m_pElem_wifi_gauge= NULL;
-gslc_tsElemRef* m_pElemenableLock = NULL;
+gslc_tsElemRef* popup_line1       = NULL;
+gslc_tsElemRef* popup_line2       = NULL;
 gslc_tsElemRef* m_pElemKeyPadNum  = NULL;
 gslc_tsElemRef* m_pElemKeyPadAlpha= NULL;
 //<Save_References !End!>
@@ -172,8 +179,8 @@ gslc_tsElemRef* m_pElemKeyPadAlpha= NULL;
 // Define debug message function
 static int16_t DebugOut(char ch) { if (ch == (char)'\n') Serial.println(""); else Serial.write(ch); return 0; }
 
-char ssid[MAX_STR];
-char password[MAX_STR];
+//char ssid[MAX_STR];
+//char password[MAX_STR];
 char ip_address[16];
 bool connecting = false;
 char my_losant_webhook_url [] = "https://triggers.losant.com/webhooks/eAPNEsTpunTnn0AC5yuCfR54GbFXdFU8hxSUKYwL";
@@ -186,38 +193,43 @@ IoT_Helper IoT_webhook;
 ESP32Time rtc;  
 Adafruit_BME280 bme280; // I2C BME280 sensor
 
-int cnt = 1;
-int cnt2 = 1;
-int r1 = 0;
-int r2 = 50;
-int cnt3 = 1;
+int wifi_progress_cnt = 1;
+int helper_cnt = 0;
 int t_minute = 0;
 int t_hour = 1;
 int year = 2022;
 int month = 6;
 int day = 6;
-int in_unlock_code = 0; // stores the input for the screen unclock code
-bool r1_ = false;
-bool r2_ = false;
-bool store_csv = false;
-bool do_upload = true;
+int inputLockCode = 0; // stores the input for the screen unclock code
+
+//bool store_csv = false;
+//bool do_upload = true;
 
 int found_networks = -5;
 bool scanning_wifi = false;
 bool loading_anim_invert = false;
-bool show_24h_average = false;
-int loading_anim_val = 0;
+bool showAverage = false;
+int16_t loading_anim_val = 0;
 
 const char* pnt = ".";
 char buff[10];
 int ret;
-int interval = 60000; // 1 minute
+//int meas_interval = 60000; // 1 minute
 unsigned long interval_heatup = 20000; // 20sec wakeup intervall
 unsigned long lastMeasure = 0;
 unsigned long currentMillis;
 unsigned long request_time = 0;
 bool measure_request = false;
 int error = 0;
+float temp_val = 0.0;
+float hum_val = 0.0;
+float pm10_continuous = 1.0;
+float pm25_continuous = 1.0;
+float cont_max_pm10 = 1.0;
+float cont_max_pm25 = 1.0;
+
+
+bool graphPM10 = true;
 
 unsigned long lastTouchEvent = 0;
 int interval_dimmer = 20000; // default 20sec dimmer timer
@@ -225,17 +237,31 @@ bool dimmerActivated = false;
 bool isDimmerRunning = false;
 bool lock_enable = false;
 
+bool progressbar_flag = false;
+bool continuousMode = false;
 
-
-void show_value(bool pm10_val=false);
+//void show_value(bool pm10_val=false);
 void printCSV();
 void resetCSV();
 void showInfo();
-void setCSV(bool enable);
+
 size_t getCSVsize();
 bool connect_wifi(const char *wifi_name);
 void setBacklight(bool state);
 void shutdown();
+void update_display_values();
+void saveConfig();
+void prepareConfig();
+void update_aqi();
+
+typedef struct {
+  char ssid[60];
+  char password[30];
+  bool store_csv;
+  bool do_upload;
+  int meas_interval; 
+} Configuration;
+Configuration config = {"","", false, false, 60000}; // default configuration
 
 #define background_color (gslc_tsColor) {0, 228, 171}
 
@@ -251,29 +277,31 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
   gslc_tsGui*     pGui     = (gslc_tsGui*)(pvGui);
   gslc_tsElemRef* pElemRef = (gslc_tsElemRef*)(pvElemRef);
   gslc_tsElem*    pElem    = gslc_GetElemFromRef(pGui,pElemRef);
+  if(dimmerActivated || lock_enable){
+      lastTouchEvent = millis();
+  }
 
   if ( eTouch == GSLC_TOUCH_UP_IN ) {
-    if(dimmerActivated || lock_enable){
-      lastTouchEvent = millis();
-    }
-
     // From the element's ID we can determine which button was pressed.
     switch (pElem->nId) {
       //<Button Enums !Start!>
       case E_ELEM_BTN_WIFI_SETUP:{
         gslc_SetPageCur(&m_gui, E_PG_WIFI);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_BTN_dashboard:{
         gslc_SetPageCur(&m_gui, E_PG_OVERVIEW);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_BTN_INFO:	{
         showInfo();
         gslc_SetPageCur(&m_gui, E_PG_INFO);	
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_BTN_SCAN_WIFI:{
@@ -282,148 +310,197 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 
       case E_ELEM_BTN_WIFI_CONNECT:{
         gslc_SetPageCur(&m_gui, E_PG_WIFI_PSWD);
+        delay(70);
         break;}
 
       case E_ELEM_BACK_PG_WIFI:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
+
+      case E_ELEM_BTN_CONTINUOUS:{
+        gslc_SetPageCur(&m_gui, E_PG_Continuous);
+        continuousMode = true;
+        break;}
+      case E_ELEM_BACK_CONTIN:{
+        gslc_SetPageCur(&m_gui, E_PG_MAIN);
+        #ifdef ESP32
+          sds_sensor.quit_continuous();
+        #else
+          sds_sensor.quit_continuous(SDS_TX, SDS_RX);
+        #endif
+        continuousMode = false;
+        break;}
+
 
       case E_ELEM_PSWD_INPUT:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadAlpha, E_POP_KEYPAD_ALPHA, m_pElemIn_PASSWORD);
+        delay(70);
         break;}
 
       case E_ELEM_BTN_CONNECT:{
-        connect_wifi(ssid);
+        delay(70);
+        connect_wifi();
+        break;}
+
+      case E_ELEM_SAVE_SET:{
+        delay(70);
+        saveConfig();
         break;}
 
       case E_ELEM_BACK_WIFI_PWD:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_TOGGLE_MEASURE:{
         if (gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_measure)) {
-          show_24h_average = true;
-          show_value(true);
-          show_value(false);
+          showAverage = true;
+          update_display_values();
         }
         else{
-          show_24h_average = false;
-          show_value(true);
-          show_value(false);
+          showAverage = false;
+          update_display_values();
         }
+        delay(70);
         break;}
 
       case E_ELEM_HOME_BTN:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_MEASURE_BTN:{
-        IoT_webhook.pm_update(sds_sensor.get_last_value(true), sds_sensor.get_last_value(false), 10,05);
+        if(!sds_sensor.is_measurement_running()){
+          sds_sensor.request_measure(millis());
+        }
+        delay(70);
         break;}
 
       case E_ELEM_BTN_SYS_SET:{	
         gslc_SetPageCur(&m_gui, E_PG_SYS_SET);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;	}
 
       case E_ELEM_BTN_IOT_SET:{	
         gslc_SetPageCur(&m_gui, E_PG_IOT_SET);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;	}
 
       case E_ELEM_DIMMER_TIMER:	{
         // Clicked on edit field, so show popup box and associate with this text field	
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElem_dimmer_timer);	
+        delay(70);
         break;	}
 
       case E_ELEM_TOGGLE_DIMMER:{
         dimmerActivated = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_dimmer);
         isDimmerRunning = dimmerActivated;
+        delay(70);
         break;	}
 
       case E_ELEM_DIM_ON:	
         setBacklight(false);
+        delay(70);
         break;	
 
       case E_ELEM_MEAS_INTERVAL:{	
         // Clicked on edit field, so show popup box and associate with this text field	
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElem_meas_interval);	
+        delay(70);
         break;}
 
       case E_ELEM_DIM_OFF:{	
         gslc_PopupHide(&m_gui);	
         setBacklight(true);
+        delay(70);
         break;}
 
       case E_ELEM_BACK_IOT:
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;
       
 
       case E_ELEM_BACK_SYSSET:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_BACK_INFO:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
       
       case E_ELEM_DEL_DATA:{
         resetCSV();
+        delay(70);
         break;}
 
       case E_ELEM_PRINT_DATA:{
         printCSV();
+        delay(70);
         break;}
 
       case E_ELEM_TOGGLE_CSV:{
-        setCSV(gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_csv));
+        config.store_csv = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_csv);
+        delay(70);
         break;}
 
       case E_ELEM_TOGGLE_IOT:{
-        do_upload = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_IoT);
+        config.do_upload = gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_IoT);
+        delay(70);
         break;}
       
       case E_ELEM_BTN_SETTIME:{
         gslc_SetPageCur(&m_gui, E_PG_TIME);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_NUM_MONTH:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemMonth);
+        delay(70);
         break;}
 
       case E_ELEM_NUM_DAY:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemDay);
+        delay(70);
         break;}
 
       case E_ELEM_NUM_YEAR:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemYear);
+        delay(70);
         break;}
 
       case E_ELEM_NUM_HOUR:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemHour);
+        delay(70);
         break;}
 
       case E_ELEM_NUM_MINUTE:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemMinute);
+        delay(70);
         break;}
 
       case E_ELEM_BACK_TIME:{
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_BTN_SAVE_TIME:{
@@ -431,14 +508,30 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         rtc.setTime(0, t_minute, t_hour, day, month, year);
         gslc_SetPageCur(&m_gui, E_PG_MAIN);
         gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_1,GSLC_IMGREF_FMT_BMP24));
+        delay(70);
         break;}
 
       case E_ELEM_SHUTDOWN:{
+        delay(70);
         shutdown();
         break;}
       case E_ELEM_CODE_INPUT:{
         // Clicked on edit field, so show popup box and associate with this text field
         gslc_ElemXKeyPadInputAsk(&m_gui, m_pElemKeyPadNum, E_POP_KEYPAD_NUM, m_pElemCodeIn);
+        delay(70);
+        break;}
+      case E_ELEM_TOGGLE_LOCK:{
+        set_lockscreen(gslc_ElemXTogglebtnGetState(&m_gui, m_pElem_toggle_lock));
+        delay(70);
+        break;}
+
+      case E_ELEM_UNLOCK:{
+        // only disable lockscreen if code input is right
+        if(inputLockCode == 628){
+          set_lockscreen(false);
+          inputLockCode = 0; // reset code input
+        }
+        delay(70);
         break;}
       
       //<Button Enums !End!>
@@ -449,44 +542,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
   return true;
 }
 
-// Checkbox / radio callbacks
-// - Creating a callback function is optional, but doing so enables you to
-//   detect changes in the state of the elements.
-bool CbCheckbox(void* pvGui, void* pvElemRef, int16_t nSelId, bool bState)
-{
-  gslc_tsGui*     pGui      = (gslc_tsGui*)(pvGui);
-  gslc_tsElemRef* pElemRef  = (gslc_tsElemRef*)(pvElemRef);
-  gslc_tsElem*    pElem     = gslc_GetElemFromRef(pGui,pElemRef);
-  if (pElemRef == NULL) {
-    return false;
-  }
-  
-  boolean bChecked = gslc_ElemXCheckboxGetState(pGui,pElemRef);
 
-  // Determine which element issued the callback
-  switch (pElem->nId) {
-//<Checkbox Enums !Start!>
-    case E_ELEM_ENABLE_LOCK:
-      set_lockscreen(bState);
-      Serial.println("Lockbutton pressen");
-      break;
-    case E_ELEM_UNLOCK:
-      // only disable lockscreen if code input is right
-      if(in_unlock_code == 628){
-        set_lockscreen(false);
-        in_unlock_code = 0; // reset code input
-        gslc_ElemXCheckboxSetState(pGui,pElemRef, false);
-      }
-      else{
-        gslc_ElemXCheckboxSetState(pGui,pElemRef, false);
-      }
-      break;
-//<Checkbox Enums !End!>
-    default:
-      break;
-  } // switch
-  return true;
-}
 // KeyPad Input Ready callback
 bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
 {
@@ -496,6 +552,10 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
 
   // From the pvData we can get the ID element that is ready.
   int16_t nTargetElemId = gslc_ElemXKeyPadDataTargetIdGet(pGui, pvData);
+  if(dimmerActivated || lock_enable){
+      lastTouchEvent = millis();
+  }
+
   if (nState == XKEYPAD_CB_STATE_DONE) {
     // User clicked on Enter to leave popup
     // - If we have a popup active, pass the return value directly to
@@ -503,7 +563,8 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
     switch (nTargetElemId) {
 
       case E_ELEM_PSWD_INPUT:
-        strcpy(password,gslc_ElemXKeyPadInputGet(pGui, m_pElemIn_PASSWORD, pvData));
+        strncpy(config.password, gslc_ElemXKeyPadInputGet(pGui, m_pElemIn_PASSWORD, pvData), sizeof(config.password));
+        //strcpy(config.password,gslc_ElemXKeyPadInputGet(pGui, m_pElemIn_PASSWORD, pvData));
 	      gslc_PopupHide(&m_gui);
         break;
       case E_ELEM_DIMMER_TIMER:	
@@ -511,7 +572,8 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
 	      gslc_PopupHide(&m_gui);	
         break;	
       case E_ELEM_MEAS_INTERVAL:	
-        sds_sensor.set_measure_interval(atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElem_meas_interval, pvData)) * 60000);
+        config.meas_interval = atoi(gslc_ElemXKeyPadInputGet(pGui, m_pElem_meas_interval, pvData)) * 60000;
+        sds_sensor.set_measure_interval(config.meas_interval);
         gslc_PopupHide(&m_gui);
         break;
       
@@ -536,7 +598,7 @@ bool CbKeypad(void* pvGui, void *pvElemRef, int16_t nState, void* pvData)
 	      gslc_PopupHide(&m_gui);
         break;
       case E_ELEM_CODE_INPUT:
-        in_unlock_code = atoi(gslc_ElemXKeyPadInputGet(pGui,  m_pElemCodeIn, pvData));
+        inputLockCode = atoi(gslc_ElemXKeyPadInputGet(pGui,  m_pElemCodeIn, pvData));
 	      gslc_PopupHide(&m_gui);
         break;
 
@@ -561,6 +623,9 @@ bool CbListbox(void* pvGui, void* pvElemRef, int16_t nSelId)
   if (pElemRef == NULL) {
     return false;
   }
+  if(dimmerActivated || lock_enable){
+      lastTouchEvent = millis();
+  }
 
   // From the element's ID we can determine which listbox was active.
   switch (pElem->nId) {
@@ -568,7 +633,8 @@ bool CbListbox(void* pvGui, void* pvElemRef, int16_t nSelId)
     case E_ELEM_WIFI_LIST:
       if (nSelId != XLISTBOX_SEL_NONE) {
         gslc_ElemXListboxGetItem(&m_gui, pElemRef, nSelId, acTxt, MAX_STR);
-        snprintf(ssid, MAX_STR, acTxt);
+        strncpy(config.ssid, acTxt, sizeof(config.ssid));
+        //snprintf(config.ssid, 60, acTxt);
         gslc_ElemSetTxtStr(pGui, m_pElem_selected_ssid, acTxt);
         gslc_ElemSetTxtStr(pGui, m_pElem_label_pg_wifi_pwd, acTxt);
       }
@@ -587,18 +653,79 @@ bool CbListbox(void* pvGui, void* pvElemRef, int16_t nSelId)
 }
 
 
+/// @brief Updating AQI-Value by mapping Value to the AQI-Table. Setting color.
+void update_aqi()                 
+{
+  float aqi_25 = calc_aqipm25(sds_sensor.getPM25value(showAverage));
+  float aqi_10 = calc_aqipm25(sds_sensor.getPM10value(showAverage));
+
+  int aqi_index = mapAqiToIndex(aqi_25);
+  int aqi_index2 = mapAqiToIndex(aqi_10);
+  // selcet the higest value
+  if(aqi_index < aqi_index2){
+    aqi_index = aqi_index2;
+  }
+  Serial.print("AQI 25 value: ");
+  Serial.print(aqi_25);
+  Serial.print("  |  AQI 10 value: ");
+  Serial.println(aqi_10);
+  Serial.print("AQI 25 index: ");
+  Serial.print(aqi_index);
+  Serial.print("  |  AQI 10 index: ");
+  Serial.println(aqi_index2);
+
+
+  
+  switch(aqi_index) {
+  case 0:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "Very good");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_GREEN_DK1);
+    break;}
+  case 1:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "Good");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_GREEN_DK1);
+    break;}
+  case 2:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "Moderate");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_YELLOW);
+    break;}
+  case 3:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "Unhealthy");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_ORANGE);
+    break;}
+  case 4:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "Very unhealthy");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_RED_DK1);
+    break;}
+  case 5:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "Risky");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_PURPLE);
+    break;}
+  case 6:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "Dangerous!");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_RED_DK3);
+    break;}
+  case 7:{
+    gslc_ElemSetTxtStr(&m_gui, m_pElem_aqi_val, "UNSAFE!");
+    gslc_ElemSetTxtCol(&m_gui, m_pElem_aqi_val, GSLC_COL_RED_DK3);
+    break;}
+  default:
+    ;
+  }
+}
+
+
+
 void set_lockscreen(bool state){
   if(state){
     lock_enable = true;
-    Serial.println("Lockscreen enabled");
     gslc_SetPageCur(&m_gui, E_PG_LOCK);
-    gslc_ElemXCheckboxSetState(&m_gui, m_pElemenableLock, true);
+    gslc_ElemXTogglebtnSetState(&m_gui, m_pElem_toggle_lock, true);
   }
   else{
     lock_enable = false;
-    Serial.println("Lockscreen disabled");
     gslc_SetPageCur(&m_gui, E_PG_OVERVIEW);
-    gslc_ElemXCheckboxSetState(&m_gui, m_pElemenableLock, false);
+    gslc_ElemXTogglebtnSetState(&m_gui, m_pElem_toggle_lock, false);
   }
 }
 
@@ -614,7 +741,6 @@ void list_wifi_networks()
     for (int i = 0; i < n; i++) {
         indices[i] = i;
     }
-
     // sort by rssi
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
@@ -625,7 +751,6 @@ void list_wifi_networks()
         }
         }
     }
-        
     // remove doubles, List only first 6 elements
     for (int i = 0; i < 7; i++) {
         if(indices[i] == -1){
@@ -636,7 +761,6 @@ void list_wifi_networks()
         strncpy(name,WiFi.SSID(indices[i]).c_str(),25);
         gslc_ElemXListboxAddItem(&m_gui, m_pElem_WIFI_LIST, name); 
     }
-
     found_networks = -5; // reset
     WiFi.scanDelete();
 }
@@ -644,12 +768,12 @@ void list_wifi_networks()
 
 
 
-bool connect_wifi(const char *wifi_name)
+bool connect_wifi()
 {
-    char msg[MAX_STR]; 
+    char msg[30]; 
     strncpy(msg,"Connecting ",12);
     gslc_ElemSetTxtStr(&m_gui, m_pElem_con_msg, msg);
-    WiFi.begin(ssid, password);
+    WiFi.begin(config.ssid, config.password);
     connecting = true;
     return true;
 }
@@ -701,38 +825,11 @@ void showInfo(){
   text += "\nCPU Freq: " + String(ESP.getCpuFreqMHz()) + " MHz - Model: " + String(ESP.getChipModel());
   text += "\nIoT-URL:  " + url_p1;
   text += "\n          " + url_p2 + "\n          " + url_p3;
-  text += "\nWiFi:     Connected? - " + wifi_connected + "\nSSID:     " + String(ssid) + " IP: " + String(ip_address); 
+  text += "\nWiFi:     Connected? - " + wifi_connected + "\nSSID:     " + String(config.ssid) + " IP: " + String(ip_address); 
   
-  //snprintf(m_acTextboxBuf1,200,(char*)"Uptime: %u sec.\nFree DRAM: %i kb\ndata.csv: %i kb\nMeas count: %u\n", seconds(), ESP.getFreeHeap()/1000, getCSVsize(), sds_sensor.get_measure_cnt(false));
-  //snprintf(m_acTextboxBuf1,600,text.c_str());
   gslc_ElemXTextboxAdd(&m_gui,m_pElem_infobox,(char*)text.c_str());
   delay(100);
 
-}
-
-
-void show_value(bool pm10_val){
-  ret = snprintf(buff, 10, "%f", sds_sensor.get_value(pm10_val, show_24h_average));
-  if(pm10_val){
-    gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_value, buff);
-    if((int)sds_sensor.get_value(pm10_val, show_24h_average) > 1.5){
-        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, (int)sds_sensor.get_value(pm10_val, show_24h_average));
-    }
-    else{
-        // To show a littlebit green
-        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, 1.5);
-    }
-  }
-  else{
-    gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_value, buff);
-    if((int)sds_sensor.get_value(pm10_val, show_24h_average) > 1.5){
-        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, (int)sds_sensor.get_value(pm10_val, show_24h_average));
-    }
-    else{
-        // To show a littlebit green
-        gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, 1.5);
-    }
-  }
 }
 
 
@@ -743,9 +840,9 @@ void show_value(bool pm10_val){
  */
 void update_display_values(){
   // Updating PM10 value
-  float pm10_val = sds_sensor.get_value(true, show_24h_average);
-  snprintf(buff, 10, "%f", pm10_val); 
-  gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_value, buff);
+  float pm10_val = sds_sensor.getPM10value(showAverage);
+  gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_value, String(pm10_val).c_str());
+
   if((int)pm10_val > 1.5){
       gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM10, (int)pm10_val);
   }
@@ -754,35 +851,29 @@ void update_display_values(){
   }
   
   // Updating pm25 
-  float pm25_val = sds_sensor.get_value(false, show_24h_average);
-  snprintf(buff, 10, "%f", pm25_val); 
-  gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_value, buff);
+  float pm25_val = sds_sensor.getPM25value(showAverage);
+  gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_value, String(pm25_val).c_str());
+
   if((int)pm25_val > 1.5){
       gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, (int)pm25_val);
   }
   else{
-      // To show a littlebit green
-      gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, 1.5);
+      gslc_ElemXRingGaugeSetVal(&m_gui, m_pElemXRingGaugePM25, 1.5); // To show a littlebit green
   }
 
   // Updating temp
-  float temp_val = bme280.readTemperature();
-  snprintf(buff, 10, "%f", temp_val); 
-  gslc_ElemSetTxtStr(&m_gui, m_pElem_temp_value, buff);
+  gslc_ElemSetTxtStr(&m_gui, m_pElem_temp_value, String(temp_val).c_str());
+
 
   // Updating humidity
-  float hum_val = bme280.readHumidity();
-  snprintf(buff, 10, "%f", hum_val); 
-  gslc_ElemSetTxtStr(&m_gui, m_pElem_hum_val, buff);
+  gslc_ElemSetTxtStr(&m_gui, m_pElem_hum_val, String(hum_val).c_str());
 
-
-
-
-  
+  update_aqi();
 }
 
-
 void shutdown(){
+  // store settings
+  saveConfig();
   gslc_Quit(&m_gui);
   SPIFFS.end();
   setBacklight(false);
@@ -793,20 +884,19 @@ void shutdown(){
 }
 
 
-void updateCSV(unsigned long currentSec){
-    if(store_csv){
-      delay(1);
+void updateCSV(){
+    if(config.store_csv){
       fs::File file = SPIFFS.open("/data.csv", "a");
       file.printf("%s,", rtc.getTime().c_str());
-      file.printf("%.2f,", sds_sensor.get_last_value(true));
-      file.printf("%.2f \n", sds_sensor.get_last_value(false));
+      file.printf("%.2f,", sds_sensor.getPM10value(false));
+      file.printf("%.2f \n", sds_sensor.getPM25value(false));
       file.close();
     }
 }
 
 // To get the size of the csv file in KB.
 size_t getCSVsize(){
-  if(store_csv){
+  if(config.store_csv){
     fs::File file = SPIFFS.open("/data.csv", "r");
     size_t size = file.size();
     file.close();
@@ -818,7 +908,7 @@ size_t getCSVsize(){
 }
 
 void printCSV(){
-  if(store_csv){
+  if(config.store_csv){
 
     Serial.println("\n============================================");
     Serial.println("========   Measurement data START   ========");
@@ -838,45 +928,24 @@ void printCSV(){
   else{
     Serial.println("CSV support deactivated!");
   }
+  
+  delay(70);
 }
 
 void resetCSV(){
-  if(store_csv){
-    SPIFFS.remove("/data.csv");
-    delay(100);
-    fs::File file = SPIFFS.open("/data.csv", "w");
-    file.printf("relative_time,pm10,pm25\n");
-    file.close();
-    delay(100);
-    SPIFFS.remove("/tmp.txt");
-  }
+  SPIFFS.remove("/data.csv");
+  delay(100);
+  fs::File file = SPIFFS.open("/data.csv", "w");
+  file.printf("time,pm10,pm25\n");
+  file.close();
+  delay(100);
+  SPIFFS.remove("/tmp.txt");
+  SPIFFS.remove("/conf.txt");
 
+  
 }
 
-void setCSV(bool enable){
-  // Creating a CSV indicator on SPIFFS, in order to recognize CSV setting at startup.
-    if(enable){
-      if(!SPIFFS.exists("/csv")){
-        fs::File file = SPIFFS.open("/csv", "w");
-        file.close();
-      }
-    }
-    else{
-      SPIFFS.remove("/csv");
-    }
-    store_csv = enable;
-}
 
-bool is_csv_enabled(){
-  if(SPIFFS.exists("/csv")){
-    Serial.println("Found CSV flag!");
-    return true;
-  }
-  else{
-    Serial.println("Not found CSV flag!");
-    return false;
-  }
-}
 
 /**
  * @brief Set the TFT Backlight LED.
@@ -898,7 +967,7 @@ void setBacklight(bool state){
 
 
 /**
- * @brief Enable dimmer if last touchevent was more than interval-time ago
+ * @brief Enable dimmer if last touchevent was more than meas_interval-time ago
  * @note  If lockscreen is enabled, display will be dimmed after 4 seconds!
  * 
  * @param _currentMillis 
@@ -922,27 +991,65 @@ void handleDimmer(unsigned long _currentMillis){
  * @note  Shows popup page if dimmer is not running. Workaraond because "close_popup" would close the dimmer popup too.
  */
 void uploadCloud(){
-  if(do_upload){
-    if(isDimmerRunning == false){
-      Serial.println("Entered");
-      gslc_PopupShow(&m_gui, E_PG_UPLOAD_POPUP, true);	
-      //gslc_PageRedrawSet(&m_gui, true);
+  if(config.do_upload){
+    if(isDimmerRunning == false && WiFi.isConnected()){
+      gslc_PopupShow(&m_gui, E_PG_UPLOAD_POPUP, true);
+      gslc_ElemSetTxtStr(&m_gui, popup_line1, "Uploading data to cloud!");
+      gslc_ElemSetTxtStr(&m_gui, popup_line2, "Please wait...");
       gslc_PageRedrawGo(&m_gui);
-      //gslc_Update(&m_gui);
-      
       delay(250);
-      IoT_webhook.pm_update(sds_sensor.get_last_value(true), sds_sensor.get_last_value(false), rtc.getHour(true), rtc.getMinute());
-      gslc_PopupHide(&m_gui);	
+      IoT_webhook.pm_update(sds_sensor.getPM10value(false), sds_sensor.getPM25value(false), rtc.getHour(true), rtc.getMinute());
+      gslc_PopupHide(&m_gui);
     }
     else{
-      IoT_webhook.pm_update(sds_sensor.get_last_value(true), sds_sensor.get_last_value(false), rtc.getHour(true), rtc.getMinute());
+      IoT_webhook.pm_update(sds_sensor.getPM10value(false), sds_sensor.getPM25value(false), rtc.getHour(true), rtc.getMinute());
     }
-
   }
 }
 
 
+void prepareConfig(){
+  if(SPIFFS.exists("/conf.txt")){
+    Serial.println("Found configuration, loading settings!");
+    fs::File file = SPIFFS.open("/conf.txt", FILE_READ);
+    //Serial.println(file.readString());
+    file.read((byte *)&config, sizeof(config));
+    file.close();
+    /*
+    String tmp = file.readStringUntil('\n');
+    Serial.println(tmp);
+    strncpy(config.ssid, tmp.c_str(), sizeof(config.ssid));
+    tmp = file.readStringUntil('\n');
+    Serial.println(tmp);
+    strncpy(config.password, tmp.c_str(), sizeof(config.password));
+    tmp = file.readStringUntil('\n');
+    Serial.println(tmp);
+    config.do_upload = tmp.toInt();
+    tmp = file.readStringUntil('\n');
+    Serial.println(tmp);
+    config.store_csv = tmp.toInt();
+    tmp = file.readStringUntil('\n');
+    Serial.println(tmp);
+    config.meas_interval = tmp.toInt();
+    file.close();
+    Serial.printf("read: %s, %s, %i,%i, %i\n", config.ssid, config.password, config.do_upload, config.store_csv, config.meas_interval);
+    */
+  }
+}
 
+void saveConfig(){
+  Serial.print("Saving config to SPIFFS: ");
+  fs::File file = SPIFFS.open("/conf.txt", FILE_WRITE);
+  file.write((byte *)&config, sizeof(config));
+  file.close();
+  
+  gslc_PopupShow(&m_gui, E_PG_UPLOAD_POPUP, true);	
+  gslc_ElemSetTxtStr(&m_gui, popup_line1, "Saved settings!");
+  gslc_ElemSetTxtStr(&m_gui, popup_line2, "");
+  gslc_PageRedrawGo(&m_gui);
+  delay(1500);
+  gslc_PopupHide(&m_gui);	
+}
 
 
 void setup()
@@ -952,46 +1059,55 @@ void setup()
     Serial.println(">>> Starting setup procedure");
     pinMode(tft_led_pin, OUTPUT);
     setBacklight(false);
-
+    Serial.println("Init guislice");
+    delay(100);
+    gslc_InitDebug(&DebugOut);
+    InitGUIslice_gen();
+    delay(20);
+    prepareConfig(); // loading config from SPIFFS
+ 
     // default BME280 settings -> SCL = D22 & SDA = D21
     if (!bme280.begin(0x76)) {
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
     }
+    bme280.setSampling(bme280.MODE_NORMAL,
+                    bme280.SAMPLING_X1, // temperature
+                    bme280.SAMPLING_X1, // pressure
+                    bme280.SAMPLING_X1, // humidity
+                    bme280.FILTER_OFF);
+    //bme280.setTemperatureCompensation();
     delay(50);
 
     #ifndef ESP32
-      sds_sensor.setup(SDS_TX, SDS_RX, interval_heatup, interval);
+      sds_sensor.setup(SDS_TX, SDS_RX, interval_heatup, config.meas_interval);
     #else
-      sds_sensor.setup(interval_heatup, interval);
+      sds_sensor.setup(interval_heatup,config.meas_interval);
     #endif
     Serial.println("IOT setup");
     IoT_webhook.setup(my_losant_webhook_url);
     Serial.println("Finished IOT setup");
-    Serial.println("Checking CSV flag");
-    store_csv = is_csv_enabled(); // load indicator from spiffs
+    //Serial.println("Checking CSV flag");
+    //store_csv = is_csv_enabled(); // load indicator from spiffs
     
-    if(store_csv){ 
+    if(config.store_csv){ 
       Serial.println("Setup data.csv");
       
       if(SPIFFS.exists("/data.csv")){
         fs::File file = SPIFFS.open("/data.csv", "a");
         file.printf("\n\n\n+++   RESTART - NEW DATASET   +++\n\n");
-        file.printf("relative_time,pm10,pm25\n");
+        file.printf("time,pm10,pm25\n");
         file.close();
       }
       else{
         fs::File file = SPIFFS.open("/data.csv", "w");
-        file.printf("relative_time,pm10,pm25\n");
+        file.printf("time,pm10,pm25\n");
         file.close();
       }
     }
 
+    gslc_ElemXTogglebtnSetState(&m_gui, m_pElem_toggle_csv, config.store_csv); // set indicator
+    gslc_ElemXTogglebtnSetState(&m_gui, m_pElem_toggle_IoT, config.do_upload); // set indicator
 
-    Serial.println("Init guislice");
-    delay(100);
-    gslc_InitDebug(&DebugOut);
-    InitGUIslice_gen();
-    gslc_ElemXTogglebtnSetState(&m_gui, m_pElem_toggle_csv, store_csv); // set indicator
 
     // Hide images and disable image-button glow (to avoid slow rendering)
     gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
@@ -1013,20 +1129,61 @@ void setup()
     gslc_SetPageCur(&m_gui, E_PG_TIME);
     gslc_SetBkgndImage(&m_gui,gslc_GetImageFromFile(IMG_BKGND_2,GSLC_IMGREF_FMT_BMP24));
     Serial.println(">>> Setup finished <<<");
+    gslc_GuiRotate(&m_gui, 3);
     setBacklight(true);
+
+    if(String(config.ssid) != ""){
+      Serial.print("Found ssid in config: ");
+      Serial.println(config.ssid);
+      WiFi.begin(config.ssid, config.password);
+      gslc_PopupShow(&m_gui, E_PG_UPLOAD_POPUP, true);
+      gslc_ElemSetTxtStr(&m_gui, popup_line1, "Connecting to WiFi:");
+      gslc_ElemSetTxtStr(&m_gui, popup_line2, String(config.ssid).c_str());
+      gslc_PageRedrawGo(&m_gui);
+      delay(5000);
+      gslc_PopupHide(&m_gui);
+      if(WiFi.status() == WL_CONNECTED){
+        gslc_ElemSetVisible(&m_gui, m_pElem_img_nowifi, false);
+        gslc_ElemSetVisible(&m_gui, m_pElem_img_wifi, true);
+      }
+    }
 }
 
-
+int graph_cnt = 0;
 // -----------------------------------
 // Main event loop
 // -----------------------------------
 void loop()
 {
-    // ------------------------------------------------
-    // Update GUI Elements
-    // ------------------------------------------------
+    if(continuousMode){
+      sds_sensor.setContinuous();
+    }
+    while(continuousMode){
+      sds_sensor.readContinuous(&pm10_continuous, &pm25_continuous);
+      Serial.printf("PM10: %.2f   PM25: %.2f\n", pm10_continuous, pm25_continuous);
+      
+      if(pm25_continuous > cont_max_pm25){
+        cont_max_pm25 = pm25_continuous;
+        gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_cont_max, String(cont_max_pm25).c_str());
+      }
 
-     
+      if(pm10_continuous > cont_max_pm10){
+        cont_max_pm10 = pm10_continuous;
+        gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_cont_max, String(cont_max_pm10).c_str());
+      }
+      gslc_ElemSetTxtStr(&m_gui, m_pElem_pm10_continuous, String(pm10_continuous).c_str());
+      gslc_ElemSetTxtStr(&m_gui, m_pElem_pm25_continuous, String(pm25_continuous).c_str());
+      
+      // wait 1sec
+      for (size_t i = 0; i < 8; i++)
+      {
+        gslc_Update(&m_gui);    
+        delay(125);
+      }  
+    }
+
+
+
     if (scanning_wifi && found_networks < 0 ){
       // WiFi scan requested but not finished or started
 
@@ -1080,14 +1237,14 @@ void loop()
 
     if ( connecting ) 
     { 
-        if(WiFi.status() != WL_CONNECTED && cnt <= 15){
+        if(WiFi.status() != WL_CONNECTED && wifi_progress_cnt <= 15){
             // Let WiFi-Connection MSG Item blink
             delay(250);
             char *msg = gslc_ElemGetTxtStr(&m_gui, m_pElem_con_msg);
             strncat(msg,pnt,MAX_STR+1);
             gslc_ElemSetTxtStr(&m_gui, m_pElem_con_msg, msg);
-            gslc_ElemSetVisible(&m_gui, m_pElem_con_msg, (cnt % 2 == 0));
-            cnt++;
+            gslc_ElemSetVisible(&m_gui, m_pElem_con_msg, (wifi_progress_cnt % 2 == 0));
+            wifi_progress_cnt++;
         }
         else{
             if(WiFi.status() == WL_CONNECTED){
@@ -1100,7 +1257,7 @@ void loop()
                 gslc_ElemSetVisible(&m_gui, m_pElem_img_nowifi, false);
                 gslc_ElemSetVisible(&m_gui, m_pElem_img_wifi, true);
                 gslc_SetPageCur(&m_gui, E_PG_OVERVIEW);
-
+                saveConfig();
             }
             else{
                 gslc_ElemSetTxtStr(&m_gui, m_pElem_con_msg, "Failed to connect!");
@@ -1109,7 +1266,7 @@ void loop()
                 gslc_ElemSetVisible(&m_gui, m_pElem_con_msg, true);
             }
             connecting = false;
-            cnt = 0;
+            wifi_progress_cnt = 0;
         }
     }
     
@@ -1121,58 +1278,75 @@ void loop()
       // new meas-values available
 
       // reset loading animation colors / values
-      gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
-      gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, false);
+      if(gslc_ElemGetVisible(&m_gui, m_pElem_Measuring)){
+        gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, false);
+        gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, false);
+      }
       loading_anim_invert = false;
       gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GRAY_LT2,GSLC_COL_WHITE);
       gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GREEN_DK1);
 
       // handle values
       update_display_values();
-      updateCSV(seconds());
+      updateCSV();
       uploadCloud();
+      helper_cnt = 0;
     }
-    else{
-      if(sds_sensor.is_measurement_running())
-      {
-          // Progressbar animation while SDS-Sensor measurement
-          gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, true);
-          gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, true);
-
-          if(!loading_anim_invert){
-            if(loading_anim_val < 400){
-              loading_anim_val++;
-            }
-            else{
-              // spin beckwards, swap active/inactive colors
-              loading_anim_invert = true; 
-              gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GREEN_DK1,GSLC_COL_WHITE);
-              gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GRAY_LT2);
-              loading_anim_val = 0;
-            }
-          }
-          else{
-            if(loading_anim_val < 400){
-              loading_anim_val++;
-            }
-            else{
-              // spin forwards, swap active/inactive colors to default
-              loading_anim_invert = false;
-              gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GRAY_LT2,GSLC_COL_WHITE);
-              gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GREEN_DK1);
-              loading_anim_val = 0;
-            }
-          }
-        delay(1.5);
-        gslc_ElemXProgressSetVal(&m_gui, m_pElem_progress_measure,(int16_t) loading_anim_val);
+    
+    else if(sds_sensor.is_measurement_running())
+    {
+      // Progressbar animation while SDS-Sensor measurement
+      if(!gslc_ElemGetVisible(&m_gui, m_pElem_Measuring)){
+        gslc_ElemSetVisible(&m_gui, m_pElem_Measuring, true);
+        gslc_ElemSetVisible(&m_gui, m_pElem_progress_measure, true);
       }
+      if(!loading_anim_invert){
+        if(loading_anim_val < 400){
+          loading_anim_val++;
+          helper_cnt += 1;  // count invertions and use it as reference for the BME temperatur measurement start point
+        }
+        else{
+          // spin beckwards, swap active/inactive colors
+          loading_anim_invert = true; 
+          gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GREEN_DK1,GSLC_COL_WHITE);
+          gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GRAY_LT2);
+          loading_anim_val = 0;
+          
+        }
+      }
+      else{
+        if(loading_anim_val < 400){
+          loading_anim_val++;
+        }
+        else{
+          // spin forwards, swap active/inactive colors to default
+          loading_anim_invert = false;
+          gslc_ElemSetCol(&m_gui,m_pElem_progress_measure,GSLC_COL_GRAY_DK1,GSLC_COL_GRAY_LT2,GSLC_COL_WHITE);
+          gslc_ElemXProgressSetGaugeCol(&m_gui,m_pElem_progress_measure, GSLC_COL_GREEN_DK1);
+          loading_anim_val = 0;
+        }
+      }
+
+      if(helper_cnt == 1600){
+        // Now the fan of the SDS sensor was turned on for approx. 10 seconds 
+        // -> Now measure temperature with BME280 because the "old" air is flushed out
+        temp_val = bme280.readTemperature();
+        hum_val = bme280.readHumidity();
+        helper_cnt += 1; // to avoid running this code-block again
+      }
+      if(progressbar_flag){
+        gslc_ElemXProgressSetVal(&m_gui, m_pElem_progress_measure,loading_anim_val);
+        gslc_Update(&m_gui);
+        delay(3);
+      }else{
+        gslc_Update(&m_gui);
+        delay(3);
+      }
+      progressbar_flag = !progressbar_flag;
     }
     
     handleDimmer(currentMillis);
-    // ------------------------------------------------
-    // Periodically call GUIslice update function
-    // ------------------------------------------------
-    gslc_Update(&m_gui);
-    delay(1);
+    gslc_Update(&m_gui);    // Periodically call GUIslice update function
+    
 }
 
